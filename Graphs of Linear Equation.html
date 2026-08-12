@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exploring Linear Equations: y = mx + c</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --accent: #10b981;
+      --error: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 2.25rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border-color);
+    }
+
+    .card h2 {
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card p.description {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .layout-grid {
+        grid-template-columns: 320px 1fr;
+      }
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* Table Styling */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .data-table th, .data-table td {
+      border: 1px solid var(--border-color);
+      padding: 0.5rem;
+      text-align: center;
+    }
+
+    .data-table th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+      color: var(--text-main);
+      width: 50px;
+    }
+
+    .data-table input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      text-align: center;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .data-table input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .data-table input[readonly] {
+      background-color: #f1f5f9;
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    /* Buttons & Feedback */
+    .btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn:disabled {
+      background-color: #cbd5e1;
+      cursor: not-allowed;
+    }
+
+    .message {
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .message.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .message.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .message.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+    .equation-display {
+      margin-top: 1rem;
+      padding: 1rem;
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #166534;
+      display: none;
+    }
+
+    /* Canvas Container */
+    .canvas-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    canvas {
+      background: #ffffff;
+      cursor: crosshair;
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Linear Equations Visualizer</h1>
+    <p>Explore the relationship between coordinates, lines, and the equation <strong>y = mx + c</strong></p>
+  </header>
+
+  <!-- PART 1 -->
+  <section class="card">
+    <h2>Part 1: From Table to Line</h2>
+    <p class="description">Enter 3 coordinate points (x, y) into the table below. If all 3 points lie on the same straight line, the line will be plotted automatically!</p>
+    
+    <div class="layout-grid">
+      <div class="controls">
+        <table class="data-table">
+          <tr>
+            <th>x</th>
+            <td><input type="number" class="p1-x" value="-2" step="any"></td>
+            <td><input type="number" class="p1-x" value="0" step="any"></td>
+            <td><input type="number" class="p1-x" value="2" step="any"></td>
+          </tr>
+          <tr>
+            <th>y</th>
+            <td><input type="number" class="p1-y" value="-3" step="any"></td>
+            <td><input type="number" class="p1-y" value="1" step="any"></td>
+            <td><input type="number" class="p1-y" value="5" step="any"></td>
+          </tr>
+        </table>
+
+        <div id="p1-status" class="message info">Checking points...</div>
+
+        <button id="p1-btn" class="btn" disabled>Show Equation</button>
+
+        <div id="p1-equation" class="equation-display"></div>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="p1-canvas" width="400" height="400"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- PART 2 -->
+  <section class="card">
+    <h2>Part 2: From Line to Point</h2>
+    <p class="description">Click any 2 points on the graph grid to construct a line. Then type an <strong>x</strong> value in the table to calculate its <strong>y</strong> value and view its projections on the axes!</p>
+
+    <div class="layout-grid">
+      <div class="controls">
+        <div id="p2-status" class="message info">Click on the grid to select Point 1.</div>
+
+        <table class="data-table">
+          <tr>
+            <th>x</th>
+            <td><input type="number" class="p2-x" id="p2-x1" value="1" step="any" disabled></td>
+          </tr>
+          <tr>
+            <th>y</th>
+            <td><input type="number" class="p2-y" id="p2-y1" readonly></td>
+          </tr>
+        </table>
+
+        <button id="p2-reset" class="btn" style="background-color: #64748b;">Reset Points</button>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="p2-canvas" width="400" height="400"></canvas>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  /**
+   * Universal Graph Drawer Utility Class
+   */
+  class CoordinateGraph {
+    constructor(canvasId, xMin = -5, xMax = 5, yMin = -7, yMax = 7) {
+      this.canvas = document.getElementById(canvasId);
+      this.ctx = this.canvas.getContext('2d');
+      this.xMin = xMin;
+      this.xMax = xMax;
+      this.yMin = yMin;
+      this.yMax = yMax;
+      this.width = this.canvas.width;
+      this.height = this.canvas.height;
+      this.padding = 25; // Margin for arrows and labels
+    }
+
+    toPixel(x, y) {
+      const drawableWidth = this.width - 2 * this.padding;
+      const drawableHeight = this.height - 2 * this.padding;
+
+      const px = this.padding + ((x - this.xMin) / (this.xMax - this.xMin)) * drawableWidth;
+      const py = this.height - this.padding - ((y - this.yMin) / (this.yMax - this.yMin)) * drawableHeight;
+      return { x: px, y: py };
+    }
+
+    toMath(px, py) {
+      const drawableWidth = this.width - 2 * this.padding;
+      const drawableHeight = this.height - 2 * this.padding;
+
+      const x = this.xMin + ((px - this.padding) / drawableWidth) * (this.xMax - this.xMin);
+      const y = this.yMin + ((this.height - this.padding - py) / drawableHeight) * (this.yMax - this.yMin);
+      return { x, y };
+    }
+
+    drawArrow(fromX, fromY, toX, toY, color = '#475569', arrowHeadSize = 8) {
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+
+      this.ctx.strokeStyle = color;
+      this.ctx.fillStyle = color;
+      this.ctx.lineWidth = 2;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(fromX, fromY);
+      this.ctx.lineTo(toX, toY);
+      this.ctx.stroke();
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(toX, toY);
+      this.ctx.lineTo(
+        toX - arrowHeadSize * Math.cos(angle - Math.PI / 6),
+        toY - arrowHeadSize * Math.sin(angle - Math.PI / 6)
+      );
+      this.ctx.lineTo(
+        toX - arrowHeadSize * Math.cos(angle + Math.PI / 6),
+        toY - arrowHeadSize * Math.sin(angle + Math.PI / 6)
+      );
+      this.ctx.closePath();
+      this.ctx.fill();
+    }
+
+    drawGrid() {
+      this.ctx.clearRect(0, 0, this.width, this.height);
+
+      // Grid Lines
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeStyle = '#e2e8f0';
+
+      for (let x = Math.ceil(this.xMin); x <= Math.floor(this.xMax); x++) {
+        const { x: px } = this.toPixel(x, 0);
+        this.ctx.beginPath();
+        this.ctx.moveTo(px, this.padding);
+        this.ctx.lineTo(px, this.height - this.padding);
+        this.ctx.stroke();
+      }
+
+      for (let y = Math.ceil(this.yMin); y <= Math.floor(this.yMax); y++) {
+        const { y: py } = this.toPixel(0, y);
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.padding, py);
+        this.ctx.lineTo(this.width - this.padding, py);
+        this.ctx.stroke();
+      }
+
+      // Main Axes with Arrows
+      const origin = this.toPixel(0, 0);
+
+      // X-Axis
+      this.drawArrow(origin.x, origin.y, this.width - 5, origin.y); 
+      this.drawArrow(origin.x, origin.y, 5, origin.y);               
+
+      // Y-Axis
+      this.drawArrow(origin.x, origin.y, origin.x, 5);               
+      this.drawArrow(origin.x, origin.y, origin.x, this.height - 5); 
+
+      // Axis Labels (x and y)
+      this.ctx.fillStyle = '#1e293b';
+      this.ctx.font = 'italic bold 15px sans-serif';
+
+      this.ctx.textAlign = 'right';
+      this.ctx.textBaseline = 'bottom';
+      this.ctx.fillText('x', this.width - 2, origin.y - 6);
+
+      this.ctx.textAlign = 'left';
+      this.ctx.textBaseline = 'top';
+      this.ctx.fillText('y', origin.x + 8, 2);
+
+      // Scale Labels
+      this.ctx.fillStyle = '#64748b';
+      this.ctx.font = '12px sans-serif';
+
+      // X-Tick Numbers
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'top';
+      for (let x = Math.ceil(this.xMin); x <= Math.floor(this.xMax); x++) {
+        if (x === 0) continue;
+        const p = this.toPixel(x, 0);
+        this.ctx.fillText(x, p.x, origin.y + 4);
+      }
+
+      // Y-Tick Numbers
+      this.ctx.textAlign = 'right';
+      this.ctx.textBaseline = 'middle';
+      for (let y = Math.ceil(this.yMin); y <= Math.floor(this.yMax); y++) {
+        if (y === 0) continue;
+        const p = this.toPixel(0, y);
+        this.ctx.fillText(y, origin.x - 6, p.y);
+      }
+    }
+
+    drawPoint(x, y, color = '#2563eb', radius = 5) {
+      const p = this.toPixel(x, y);
+      this.ctx.fillStyle = color;
+      this.ctx.beginPath();
+      this.ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+
+    drawLine(m, c, color = '#2563eb') {
+      const x1 = this.xMin;
+      const y1 = m * x1 + c;
+      const x2 = this.xMax;
+      const y2 = m * x2 + c;
+
+      const p1 = this.toPixel(x1, y1);
+      const p2 = this.toPixel(x2, y2);
+
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = 2.5;
+      this.ctx.beginPath();
+      this.ctx.moveTo(p1.x, p1.y);
+      this.ctx.lineTo(p2.x, p2.y);
+      this.ctx.stroke();
+    }
+
+    drawVerticalLine(x, color = '#2563eb') {
+      const p1 = this.toPixel(x, this.yMin);
+      const p2 = this.toPixel(x, this.yMax);
+
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = 2.5;
+      this.ctx.beginPath();
+      this.ctx.moveTo(p1.x, p1.y);
+      this.ctx.lineTo(p2.x, p2.y);
+      this.ctx.stroke();
+    }
+
+    // New Helper: Dotted projection lines from (x, y) to both axes
+    drawDottedProjections(x, y, color = '#ef4444') {
+      const pt = this.toPixel(x, y);
+      const xAxisPt = this.toPixel(x, 0);
+      const yAxisPt = this.toPixel(0, y);
+
+      this.ctx.save();
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = 1.5;
+      this.ctx.setLineDash([5, 4]); // Red dotted pattern
+
+      // Vertical line down to X-axis
+      this.ctx.beginPath();
+      this.ctx.moveTo(pt.x, pt.y);
+      this.ctx.lineTo(xAxisPt.x, xAxisPt.y);
+      this.ctx.stroke();
+
+      // Horizontal line across to Y-axis
+      this.ctx.beginPath();
+      this.ctx.moveTo(pt.x, pt.y);
+      this.ctx.lineTo(yAxisPt.x, yAxisPt.y);
+      this.ctx.stroke();
+
+      this.ctx.restore();
+    }
+  }
+
+  // ==========================================
+  // PART 1 LOGIC
+  // ==========================================
+  const graph1 = new CoordinateGraph('p1-canvas', -5, 5, -7, 7);
+  const p1XInputs = document.querySelectorAll('.p1-x');
+  const p1YInputs = document.querySelectorAll('.p1-y');
+  const p1Status = document.getElementById('p1-status');
+  const p1Btn = document.getElementById('p1-btn');
+  const p1EqDisplay = document.getElementById('p1-equation');
+
+  let currentLineData = null;
+
+  function formatEquation(m, c, isVertical, xVal) {
+    if (isVertical) return `x = ${xVal}`;
+    
+    let mStr = Number.isInteger(m) ? m : parseFloat(m.toFixed(2));
+    let cStr = Number.isInteger(c) ? c : parseFloat(c.toFixed(2));
+
+    let eq = 'y = ';
+    
+    if (mStr === 1) eq += 'x';
+    else if (mStr === -1) eq += '-x';
+    else if (mStr !== 0) eq += `${mStr}x`;
+
+    if (cStr > 0) {
+      eq += (mStr !== 0) ? ` + ${cStr}` : `${cStr}`;
+    } else if (cStr < 0) {
+      eq += (mStr !== 0) ? ` - ${Math.abs(cStr)}` : `${cStr}`;
+    } else if (mStr === 0) {
+      eq += '0';
+    }
+
+    return eq;
+  }
+
+  function processPart1() {
+    graph1.drawGrid();
+    p1EqDisplay.style.display = 'none';
+
+    const points = [];
+    for (let i = 0; i < 3; i++) {
+      const x = parseFloat(p1XInputs[i].value);
+      const y = parseFloat(p1YInputs[i].value);
+      if (!isNaN(x) && !isNaN(y)) {
+        points.push({ x, y });
+      }
+    }
+
+    if (points.length < 3) {
+      p1Status.className = 'message error';
+      p1Status.textContent = 'Please enter valid numerical values for all points.';
+      p1Btn.disabled = true;
+      return;
+    }
+
+    points.forEach(p => graph1.drawPoint(p.x, p.y, '#2563eb'));
+
+    const [p1, p2, p3] = points;
+    const lhs = (p2.y - p1.y) * (p3.x - p2.x);
+    const rhs = (p3.y - p2.y) * (p2.x - p1.x);
+
+    const isCollinear = Math.abs(lhs - rhs) < 1e-7;
+
+    if (isCollinear) {
+      p1Status.className = 'message success';
+      p1Status.textContent = 'Great! All 3 points lie on a straight line.';
+      p1Btn.disabled = false;
+
+      if (Math.abs(p2.x - p1.x) < 1e-7) {
+        graph1.drawVerticalLine(p1.x, '#10b981');
+        currentLineData = { isVertical: true, xVal: p1.x };
+      } else {
+        const m = (p2.y - p1.y) / (p2.x - p1.x);
+        const c = p1.y - m * p1.x;
+        graph1.drawLine(m, c, '#10b981');
+        currentLineData = { m, c, isVertical: false };
+      }
+      
+      points.forEach(p => graph1.drawPoint(p.x, p.y, '#2563eb'));
+
+    } else {
+      p1Status.className = 'message error';
+      p1Status.textContent = 'These points do not lie on a straight line. Try adjusting them!';
+      p1Btn.disabled = true;
+      currentLineData = null;
+    }
+  }
+
+  [...p1XInputs, ...p1YInputs].forEach(input => {
+    input.addEventListener('input', processPart1);
+  });
+
+  p1Btn.addEventListener('click', () => {
+    if (currentLineData) {
+      const eq = formatEquation(currentLineData.m, currentLineData.c, currentLineData.isVertical, currentLineData.xVal);
+      p1EqDisplay.textContent = eq;
+      p1EqDisplay.style.display = 'block';
+    }
+  });
+
+
+  // ==========================================
+  // PART 2 LOGIC
+  // ==========================================
+  const graph2 = new CoordinateGraph('p2-canvas', -4, 4, -6, 6);
+  
+  let p2Points = [];
+  const p2Status = document.getElementById('p2-status');
+  const p2XInput = document.getElementById('p2-x1');
+  const p2YInput = document.getElementById('p2-y1');
+  const p2ResetBtn = document.getElementById('p2-reset');
+
+  function renderPart2() {
+    graph2.drawGrid();
+
+    p2Points.forEach((p) => {
+      graph2.drawPoint(p.x, p.y, '#2563eb', 6);
+    });
+
+    if (p2Points.length < 2) {
+      p2XInput.disabled = true;
+      p2YInput.value = '';
+      return;
+    }
+
+    p2XInput.disabled = false;
+
+    const [p1, p2] = p2Points;
+    const isVertical = Math.abs(p2.x - p1.x) < 1e-7;
+    let m = 0, c = 0;
+
+    if (isVertical) {
+      graph2.drawVerticalLine(p1.x, '#2563eb');
+    } else {
+      m = (p2.y - p1.y) / (p2.x - p1.x);
+      c = p1.y - m * p1.x;
+      graph2.drawLine(m, c, '#2563eb');
+    }
+
+    p2Points.forEach(p => graph2.drawPoint(p.x, p.y, '#2563eb', 6));
+
+    // Calculate Y for the single input point
+    const xVal = parseFloat(p2XInput.value);
+    if (!isNaN(xVal)) {
+      if (isVertical) {
+        p2YInput.value = 'Undefined';
+      } else {
+        const calculatedY = m * xVal + c;
+        p2YInput.value = Number.isInteger(calculatedY) ? calculatedY : parseFloat(calculatedY.toFixed(2));
+        
+        // Draw dotted projection lines to axes
+        graph2.drawDottedProjections(xVal, calculatedY, '#ef4444');
+        
+        // Highlight the target point in red
+        graph2.drawPoint(xVal, calculatedY, '#ef4444', 6);
+      }
+    } else {
+      p2YInput.value = '';
+    }
+  }
+
+  graph2.canvas.addEventListener('click', (e) => {
+    if (p2Points.length >= 2) return;
+
+    const rect = graph2.canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+
+    const mathPos = graph2.toMath(px, py);
+    
+    const snappedX = Math.round(mathPos.x);
+    const snappedY = Math.round(mathPos.y);
+
+    if (p2Points.length === 1 && p2Points[0].x === snappedX && p2Points[0].y === snappedY) {
+      return;
+    }
+
+    p2Points.push({ x: snappedX, y: snappedY });
+
+    if (p2Points.length === 1) {
+      p2Status.className = 'message info';
+      p2Status.textContent = `Point 1 set at (${snappedX}, ${snappedY}). Click to set Point 2.`;
+    } else if (p2Points.length === 2) {
+      p2Status.className = 'message success';
+      p2Status.textContent = `Line constructed! Enter an X value to see its projection on the axes.`;
+    }
+
+    renderPart2();
+  });
+
+  p2XInput.addEventListener('input', renderPart2);
+
+  p2ResetBtn.addEventListener('click', () => {
+    p2Points = [];
+    p2Status.className = 'message info';
+    p2Status.textContent = 'Click on the grid to select Point 1.';
+    renderPart2();
+  });
+
+  // Initial Load Trigger
+  processPart1();
+  renderPart2();
+</script>
+
+</body>
+</html>
