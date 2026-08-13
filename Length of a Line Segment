@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Line Segment Length & Pythagoras' Theorem</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --point-a: #dc2626;
+      --point-b: #2563eb;
+      --point-n: #16a34a;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #cbd5e1;
+      --text: #1e293b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    header h1 {
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+
+    header p {
+      color: #64748b;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 850px) {
+      .main-grid {
+        grid-template-columns: 320px 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      color: #334155;
+      border-bottom: 2px solid var(--bg);
+      padding-bottom: 8px;
+    }
+
+    /* Range Table Styling */
+    .range-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+
+    .range-table th, .range-table td {
+      padding: 6px 8px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+
+    .range-table th {
+      background-color: #f1f5f9;
+      font-size: 0.85rem;
+    }
+
+    .range-table input {
+      width: 100%;
+      padding: 6px;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, opacity 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .btn:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .btn-secondary {
+      background-color: #64748b;
+    }
+
+    .btn-secondary:hover {
+      background-color: #475569;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .coords-display {
+      font-size: 0.9rem;
+      margin-top: 10px;
+      background: #f1f5f9;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .coords-display div {
+      margin-bottom: 4px;
+    }
+
+    .coords-display div:last-child {
+      margin-bottom: 0;
+    }
+
+    .dot-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .working-out {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .step-card {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .step-card h3 {
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+
+    .math-formula {
+      font-family: 'Courier New', Courier, monospace;
+      background: #ffffff;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      margin-top: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Calculating Line Segment Length</h1>
+    <p>Click on the grid to set points and discover how Pythagoras' Theorem finds the distance.</p>
+  </header>
+
+  <div class="main-grid">
+    <!-- Left Column: Controls & Actions -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <!-- Range Setup -->
+      <div class="card">
+        <h2>1. Grid Range</h2>
+        <table class="range-table">
+          <thead>
+            <tr>
+              <th>Axis</th>
+              <th>Min Value</th>
+              <th>Max Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>X</strong></td>
+              <td><input type="number" id="xMin" value="-10"></td>
+              <td><input type="number" id="xMax" value="10"></td>
+            </tr>
+            <tr>
+              <td><strong>Y</strong></td>
+              <td><input type="number" id="yMin" value="-10"></td>
+              <td><input type="number" id="yMax" value="10"></td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="btn btn-secondary" onclick="updateRange()">Apply Range</button>
+      </div>
+
+      <!-- Point Selection Controls -->
+      <div class="card">
+        <h2>2. Points</h2>
+        <div class="coords-display">
+          <div><span class="dot-indicator" style="background: var(--point-a);"></span> <strong>Point A:</strong> <span id="pointA-val">Not set (Click grid)</span></div>
+          <div><span class="dot-indicator" style="background: var(--point-b);"></span> <strong>Point B:</strong> <span id="pointB-val">Not set (Click grid)</span></div>
+          <div><span class="dot-indicator" style="background: var(--point-n);"></span> <strong>Point N:</strong> <span id="pointN-val">Not set</span></div>
+        </div>
+        <button class="btn btn-secondary" style="margin-top: 12px;" onclick="resetPoints()">Clear Points</button>
+      </div>
+
+      <!-- Step Actions -->
+      <div class="card">
+        <h2>3. Constructions & Steps</h2>
+        <button class="btn" id="btn-triangle" onclick="drawTriangle()" disabled>Draw Triangle</button>
+        <button class="btn" id="btn-legs" onclick="calcLegs()" disabled>Calculate Lengths AN & BN</button>
+        <button class="btn" id="btn-hypotenuse" onclick="calcHypotenuse()" disabled>Calculate Length AB</button>
+      </div>
+    </div>
+
+    <!-- Right Column: Canvas & Working Out -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <div class="canvas-container">
+        <canvas id="gridCanvas"></canvas>
+      </div>
+
+      <!-- Working Out Area -->
+      <div class="card working-out" id="working-area" style="display: none;">
+        <h2>Step-by-Step Solution</h2>
+        <div id="step-legs" class="step-card" style="display: none;">
+          <h3>Leg Lengths (AN & BN)</h3>
+          <p>Subtract the smaller coordinate value from the larger coordinate value:</p>
+          <div class="math-formula" id="formula-an"></div>
+          <div class="math-formula" id="formula-bn"></div>
+        </div>
+        <div id="step-hypotenuse" class="step-card" style="display: none; border-left-color: var(--point-n);">
+          <h3>Distance (AB) using Pythagoras' Theorem</h3>
+          <p>Formula: AB² = AN² + BN² ⟹ AB = √(AN² + BN²)</p>
+          <div class="math-formula" id="formula-ab"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // State variables
+  let xMin = -10, xMax = 10;
+  let yMin = -10, yMax = 10;
+  let pointA = null;
+  let pointB = null;
+  let pointN = null;
+  
+  let showTriangle = false;
+  let showLegLabels = false;
+
+  const canvas = document.getElementById('gridCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    draw();
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+
+  function updateRange() {
+    const newXMin = parseFloat(document.getElementById('xMin').value);
+    const newXMax = parseFloat(document.getElementById('xMax').value);
+    const newYMin = parseFloat(document.getElementById('yMin').value);
+    const newYMax = parseFloat(document.getElementById('yMax').value);
+
+    if (newXMin >= newXMax || newYMin >= newYMax) {
+      alert("Min values must be strictly smaller than Max values.");
+      return;
+    }
+
+    xMin = newXMin; xMax = newXMax;
+    yMin = newYMin; yMax = newYMax;
+
+    resetPoints();
+  }
+
+  function resetPoints() {
+    pointA = null;
+    pointB = null;
+    pointN = null;
+    showTriangle = false;
+    showLegLabels = false;
+
+    document.getElementById('pointA-val').innerText = "Not set (Click grid)";
+    document.getElementById('pointB-val').innerText = "Not set (Click grid)";
+    document.getElementById('pointN-val').innerText = "Not set";
+
+    document.getElementById('btn-triangle').disabled = true;
+    document.getElementById('btn-legs').disabled = true;
+    document.getElementById('btn-hypotenuse').disabled = true;
+
+    document.getElementById('working-area').style.display = "none";
+    document.getElementById('step-legs').style.display = "none";
+    document.getElementById('step-hypotenuse').style.display = "none";
+
+    draw();
+  }
+
+  function toCanvasX(x) {
+    return ((x - xMin) / (xMax - xMin)) * canvas.width;
+  }
+
+  function toCanvasY(y) {
+    return canvas.height - ((y - yMin) / (yMax - yMin)) * canvas.height;
+  }
+
+  function toGridX(canvasX) {
+    const rawX = xMin + (canvasX / canvas.width) * (xMax - xMin);
+    return Math.round(rawX);
+  }
+
+  function toGridY(canvasY) {
+    const rawY = yMin + ((canvas.height - canvasY) / canvas.height) * (yMax - yMin);
+    return Math.round(rawY);
+  }
+
+  // Helper function to draw arrowheads
+  function drawArrowhead(fromX, fromY, toX, toY) {
+    const headLength = 10 * window.devicePixelRatio;
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    ctx.save();
+    ctx.fillStyle = '#334155';
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const clickX = (e.clientX - rect.left) * window.devicePixelRatio;
+    const clickY = (e.clientY - rect.top) * window.devicePixelRatio;
+
+    const gridX = toGridX(clickX);
+    const gridY = toGridY(clickY);
+
+    if (!pointA) {
+      pointA = { x: gridX, y: gridY };
+      document.getElementById('pointA-val').innerText = `A(${pointA.x}, ${pointA.y})`;
+    } else if (!pointB) {
+      if (gridX === pointA.x && gridY === pointA.y) return;
+      pointB = { x: gridX, y: gridY };
+      document.getElementById('pointB-val').innerText = `B(${pointB.x}, ${pointB.y})`;
+      document.getElementById('btn-triangle').disabled = false;
+    }
+
+    draw();
+  });
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Grid lines
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#e2e8f0';
+
+    for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+      const cx = toCanvasX(x);
+      ctx.beginPath();
+      ctx.moveTo(cx, 0);
+      ctx.lineTo(cx, canvas.height);
+      ctx.stroke();
+    }
+
+    for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+      const cy = toCanvasY(y);
+      ctx.beginPath();
+      ctx.moveTo(0, cy);
+      ctx.lineTo(canvas.width, cy);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.lineWidth = 2 * window.devicePixelRatio;
+    ctx.strokeStyle = '#334155';
+
+    const originX = toCanvasX(0);
+    const originY = toCanvasY(0);
+
+    // Y Axis line
+    ctx.beginPath();
+    ctx.moveTo(originX, 0);
+    ctx.lineTo(originX, canvas.height);
+    ctx.stroke();
+
+    // X Axis line
+    ctx.beginPath();
+    ctx.moveTo(0, originY);
+    ctx.lineTo(canvas.width, originY);
+    ctx.stroke();
+
+    // Draw Arrowheads on Axis Ends
+    drawArrowhead(originX, 15 * window.devicePixelRatio, originX, 0);
+    drawArrowhead(originX, canvas.height - 15 * window.devicePixelRatio, originX, canvas.height);
+    drawArrowhead(canvas.width - 15 * window.devicePixelRatio, originY, canvas.width, originY);
+    drawArrowhead(15 * window.devicePixelRatio, originY, 0, originY);
+
+    // Axis Labels 'x' and 'y'
+    ctx.fillStyle = '#0f172a';
+    ctx.font = `italic bold ${16 * window.devicePixelRatio}px sans-serif`;
+
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('x', canvas.width - 8 * window.devicePixelRatio, originY - 6 * window.devicePixelRatio);
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('y', originX + 8 * window.devicePixelRatio, 8 * window.devicePixelRatio);
+
+    // Numerical Axis Ticks/Labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = `${12 * window.devicePixelRatio}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    const xStep = Math.max(1, Math.round((xMax - xMin) / 10));
+    for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x += xStep) {
+      if (x !== 0) ctx.fillText(x, toCanvasX(x), originY + 5 * window.devicePixelRatio);
+    }
+
+    const yStep = Math.max(1, Math.round((yMax - yMin) / 10));
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y += yStep) {
+      if (y !== 0) ctx.fillText(y, originX - 5 * window.devicePixelRatio, toCanvasY(y));
+    }
+
+    // Right-Angled Triangle
+    if (showTriangle && pointA && pointB) {
+      pointN = { x: pointB.x, y: pointA.y };
+
+      const cAx = toCanvasX(pointA.x), cAy = toCanvasY(pointA.y);
+      const cBx = toCanvasX(pointB.x), cBy = toCanvasY(pointB.y);
+      const cNx = toCanvasX(pointN.x), cNy = toCanvasY(pointN.y);
+
+      ctx.save();
+      ctx.setLineDash([6 * window.devicePixelRatio, 4 * window.devicePixelRatio]);
+      ctx.lineWidth = 2 * window.devicePixelRatio;
+      ctx.strokeStyle = '#16a34a';
+
+      // Leg AN
+      ctx.beginPath();
+      ctx.moveTo(cAx, cAy);
+      ctx.lineTo(cNx, cNy);
+      ctx.stroke();
+
+      // Leg BN
+      ctx.beginPath();
+      ctx.moveTo(cBx, cBy);
+      ctx.lineTo(cNx, cNy);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Right angle marker
+      const boxSize = 12 * window.devicePixelRatio;
+      const dirX = pointA.x > pointB.x ? 1 : -1;
+      const dirY = pointB.y > pointA.y ? 1 : -1;
+
+      ctx.beginPath();
+      ctx.lineWidth = 1.5 * window.devicePixelRatio;
+      ctx.strokeStyle = '#16a34a';
+      ctx.moveTo(cNx + dirX * boxSize, cNy);
+      ctx.lineTo(cNx + dirX * boxSize, cNy + dirY * boxSize);
+      ctx.lineTo(cNx, cNy + dirY * boxSize);
+      ctx.stroke();
+
+      // Display Leg Length Values on Graph when calculated
+      if (showLegLabels) {
+        const anVal = Math.abs(pointB.x - pointA.x);
+        const bnVal = Math.abs(pointB.y - pointA.y);
+
+        ctx.font = `bold ${13 * window.devicePixelRatio}px sans-serif`;
+        ctx.fillStyle = '#15803d'; // Green highlight color
+
+        // Horizontal Leg Label (AN) - placed at midpoint of AN
+        const midANx = (cAx + cNx) / 2;
+        const offsetY = (pointB.y > pointA.y) ? 14 * window.devicePixelRatio : -10 * window.devicePixelRatio;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Draw background pill for leg text
+        drawTextBadge(`AN = ${anVal}`, midANx, cAy + offsetY);
+
+        // Vertical Leg Label (BN) - placed at midpoint of BN
+        const midBNy = (cBy + cNy) / 2;
+        const offsetX = (pointB.x > pointA.x) ? 12 * window.devicePixelRatio : -12 * window.devicePixelRatio;
+        ctx.textAlign = (pointB.x > pointA.x) ? 'left' : 'right';
+
+        drawTextBadge(`BN = ${bnVal}`, cNx + offsetX, midBNy);
+      }
+
+      drawPoint(pointN, 'N', '#16a34a');
+    }
+
+    // Line AB
+    if (pointA && pointB) {
+      ctx.lineWidth = 3 * window.devicePixelRatio;
+      ctx.strokeStyle = '#2563eb';
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(pointA.x), toCanvasY(pointA.y));
+      ctx.lineTo(toCanvasX(pointB.x), toCanvasY(pointB.y));
+      ctx.stroke();
+    }
+
+    if (pointA) drawPoint(pointA, 'A', '#dc2626');
+    if (pointB) drawPoint(pointB, 'B', '#2563eb');
+  }
+
+  // Helper to draw clean text badges with light background for readability
+  function drawTextBadge(text, x, y) {
+    ctx.save();
+    ctx.font = `bold ${12 * window.devicePixelRatio}px sans-serif`;
+    const padding = 4 * window.devicePixelRatio;
+    const metrics = ctx.measureText(text);
+    const rectWidth = metrics.width + padding * 2;
+    const rectHeight = 16 * window.devicePixelRatio;
+
+    let rectX = x - rectWidth / 2;
+    if (ctx.textAlign === 'left') rectX = x - padding;
+    if (ctx.textAlign === 'right') rectX = x - rectWidth + padding;
+    const rectY = y - rectHeight / 2;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+    ctx.strokeStyle = '#16a34a';
+    ctx.lineWidth = 1 * window.devicePixelRatio;
+    ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+
+    ctx.fillStyle = '#15803d';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  function drawPoint(pt, label, color) {
+    const cx = toCanvasX(pt.x);
+    const cy = toCanvasY(pt.y);
+    const radius = 6 * window.devicePixelRatio;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.lineWidth = 2 * window.devicePixelRatio;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = `bold ${14 * window.devicePixelRatio}px sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`${label}(${pt.x}, ${pt.y})`, cx + radius + 4, cy - 4);
+  }
+
+  function drawTriangle() {
+    if (!pointA || !pointB) return;
+    showTriangle = true;
+    pointN = { x: pointB.x, y: pointA.y };
+    document.getElementById('pointN-val').innerText = `N(${pointN.x}, ${pointN.y})`;
+    document.getElementById('btn-legs').disabled = false;
+    draw();
+  }
+
+  function calcLegs() {
+    if (!pointN) return;
+
+    showLegLabels = true; // Trigger rendering leg lengths on canvas
+
+    let xMaxVal, xMinVal, xMaxLabel, xMinLabel;
+    if (pointB.x >= pointA.x) {
+      xMaxVal = pointB.x; xMinVal = pointA.x;
+      xMaxLabel = `X_B`; xMinLabel = `X_A`;
+    } else {
+      xMaxVal = pointA.x; xMinVal = pointB.x;
+      xMaxLabel = `X_A`; xMinLabel = `X_B`;
+    }
+    const an = xMaxVal - xMinVal;
+    const formattedXMin = xMinVal < 0 ? `(${xMinVal})` : `${xMinVal}`;
+
+    let yMaxVal, yMinVal, yMaxLabel, yMinLabel;
+    if (pointB.y >= pointA.y) {
+      yMaxVal = pointB.y; yMinVal = pointA.y;
+      yMaxLabel = `Y_B`; yMinLabel = `Y_A`;
+    } else {
+      yMaxVal = pointA.y; yMinVal = pointB.y;
+      yMaxLabel = `Y_A`; yMinLabel = `Y_B`;
+    }
+    const bn = yMaxVal - yMinVal;
+    const formattedYMin = yMinVal < 0 ? `(${yMinVal})` : `${yMinVal}`;
+
+    document.getElementById('formula-an').innerText = 
+      `AN = ${xMaxLabel} - ${xMinLabel} = ${xMaxVal} - ${formattedXMin} = ${an}`;
+      
+    document.getElementById('formula-bn').innerText = 
+      `BN = ${yMaxLabel} - ${yMinLabel} = ${yMaxVal} - ${formattedYMin} = ${bn}`;
+
+    document.getElementById('working-area').style.display = "flex";
+    document.getElementById('step-legs').style.display = "block";
+    document.getElementById('btn-hypotenuse').disabled = false;
+
+    draw(); // Redraw canvas to render length badges on graph
+  }
+
+  function calcHypotenuse() {
+    if (!pointN) return;
+
+    const an = Math.abs(pointB.x - pointA.x);
+    const bn = Math.abs(pointB.y - pointA.y);
+    const abSquared = an * an + bn * bn;
+    const ab = Math.sqrt(abSquared).toFixed(2);
+
+    document.getElementById('formula-ab').innerText = 
+      `AB = √(${an}² + ${bn}²) = √(${an * an} + ${bn * bn}) = √${abSquared} ≈ ${ab}`;
+
+    document.getElementById('step-hypotenuse').style.display = "block";
+  }
+
+  setTimeout(resizeCanvas, 50);
+</script>
+
+</body>
+</html>
