@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volume of a Square Pyramid - Dissection Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        p.subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 700px;
+        }
+        .controls {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .instructions {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 12px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+            font-size: 15px;
+        }
+        #feedback {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .text-error { color: #e74c3c; }
+        .text-success { color: #27ae60; }
+        .text-info { color: #2980b9; }
+
+        .canvas-container {
+            position: relative;
+            width: 800px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .canvas-title {
+            background: #eef2f5;
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        #cube-canvas {
+            width: 100%;
+            height: 400px;
+            display: block;
+            cursor: grab;
+        }
+        #cube-canvas:active {
+            cursor: grabbing;
+        }
+
+        #extracted-container {
+            width: 800px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        #pyramids-shelf {
+            display: flex;
+            width: 100%;
+            height: 240px;
+        }
+        .shelf-slot {
+            flex: 1;
+            height: 100%;
+            border-right: 1px solid #eee;
+            position: relative;
+            background: #ffffff;
+            cursor: grab;
+        }
+        .shelf-slot:active {
+            cursor: grabbing;
+        }
+        .shelf-slot:last-child {
+            border-right: none;
+        }
+        .shelf-slot canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .equation-box {
+            background: #2c3e50;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+            display: none;
+            animation: fadeIn 0.8s ease-in-out forwards;
+        }
+        .equation-box blockquote {
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            color: #f1c40f;
+        }
+        .equation-box p {
+            margin-top: 8px;
+            font-size: 16px;
+            color: #ecf0f1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <!-- Import Three.js and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <h1>Volume of a Square Pyramid</h1>
+    <p class="subtitle">Interactively dissect a cube into three congruent square pyramids where the apex is directly above one corner of the square base.</p>
+
+    <div class="controls">
+        <label for="cube-size">Cube Side Length (a):</label>
+        <input type="number" id="cube-size" value="4" min="2" max="10" step="1">
+        <button id="btn-generate">Generate Cube</button>
+    </div>
+
+    <div class="instructions">
+        <strong>Task:</strong> Click on a unique corner vertex to cut out and extract its square pyramid.
+        <div id="feedback" class="text-info">Click "Generate Cube" to start.</div>
+    </div>
+
+    <div class="canvas-container">
+        <div class="canvas-title">Main 3D Workspace (Click & Drag to Rotate | Click a Unique Red Vertex Sphere to Cut)</div>
+        <canvas id="cube-canvas"></canvas>
+    </div>
+
+    <div id="extracted-container">
+        <div class="canvas-title">Extracted Pyramids Row (Click & Drag Any Pyramid Below to Rotate)</div>
+        <div id="pyramids-shelf">
+            <div class="shelf-slot" id="slot-0"></div>
+            <div class="shelf-slot" id="slot-1"></div>
+            <div class="shelf-slot" id="slot-2"></div>
+        </div>
+    </div>
+
+    <div class="equation-box" id="equation-display">
+        <blockquote>Volume of Cuboid = 3 × Volume of square pyramid</blockquote>
+        <p>Therefore: <strong>Volume of Square Pyramid = ⅓ × Base Area × Height</strong></p>
+    </div>
+
+    <script>
+        // --- Global Variables ---
+        let sideLength = 4;
+        let extractedCount = 0;
+        
+        // Target Apex is Vertex 6. Each of the 3 pyramids has 1 unique corner vertex on its base face:
+        // Pyramid 1 (Base Z=0): Unique Vertex 2
+        // Pyramid 2 (Base X=0): Unique Vertex 7
+        // Pyramid 3 (Base Y=0): Unique Vertex 5
+        const validPyramidsDef = [
+            { id: 0, uniqueVertex: 2, base: [0, 1, 2, 3], apex: 6, label: "Pyramid 1 (Base Z=0)" },
+            { id: 1, uniqueVertex: 7, base: [0, 3, 7, 4], apex: 6, label: "Pyramid 2 (Base X=0)" },
+            { id: 2, uniqueVertex: 5, base: [0, 1, 5, 4], apex: 6, label: "Pyramid 3 (Base Y=0)" }
+        ];
+        let remainingPyramids = [];
+
+        // Three.js main scene variables
+        let scene, camera, renderer, controls;
+        let vertexSpheres = [];
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let cubeGroup = new THREE.Group();
+
+        // Shelf sub-scenes
+        let shelfScenes = [];
+
+        // High-Vibrancy Colors
+        const pyramidColors = [0xff4757, 0x2ed573, 0xa55eea];
+
+        // --- Initialization ---
+        function init() {
+            const canvas = document.getElementById('cube-canvas');
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xfcfcfc);
+
+            camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Main Scene Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            dirLight.position.set(10, 20, 15);
+            scene.add(dirLight);
+
+            scene.add(cubeGroup);
+
+            // Interaction
+            canvas.addEventListener('pointerdown', onVertexClick);
+
+            // Setup
+            initShelf();
+            generateCube();
+
+            // Render loop
+            animate();
+        }
+
+        // --- Cube & Vertex Generation ---
+        function generateCube() {
+            sideLength = parseFloat(document.getElementById('cube-size').value) || 4;
+            
+            // Reset state
+            extractedCount = 0;
+            remainingPyramids = JSON.parse(JSON.stringify(validPyramidsDef));
+            document.getElementById('equation-display').style.display = 'none';
+            updateFeedback("Click a unique vertex to remove the square pyramid.", "info");
+
+            // Reset shelf scenes with upgraded high-intensity lighting and default camera views
+            shelfScenes.forEach(s => {
+                while(s.scene.children.length > 0){ 
+                    s.scene.remove(s.scene.children[0]); 
+                }
+                
+                const amb = new THREE.AmbientLight(0xffffff, 1.2);
+                const dir1 = new THREE.DirectionalLight(0xffffff, 0.8);
+                dir1.position.set(10, 15, 12);
+                const dir2 = new THREE.DirectionalLight(0xffffff, 0.5);
+                dir2.position.set(-10, -10, -10);
+
+                s.scene.add(amb, dir1, dir2);
+                s.mesh = null;
+                s.isUserInteracting = false;
+                
+                s.camera.position.set(sideLength * 2.0, sideLength * 1.6, sideLength * 2.4);
+                s.camera.lookAt(0, 0, 0);
+                s.controls.target.set(0, 0, 0);
+                s.controls.update();
+            });
+
+            // Clear main group
+            while(cubeGroup.children.length > 0) {
+                cubeGroup.remove(cubeGroup.children[0]);
+            }
+
+            const s = sideLength;
+            const halfS = s / 2;
+
+            window.cubeCornerCoords = [
+                new THREE.Vector3(-halfS, -halfS, -halfS), // 0
+                new THREE.Vector3( halfS, -halfS, -halfS), // 1
+                new THREE.Vector3( halfS,  halfS, -halfS), // 2 (Unique to P1)
+                new THREE.Vector3(-halfS,  halfS, -halfS), // 3
+                new THREE.Vector3(-halfS, -halfS,  halfS), // 4
+                new THREE.Vector3( halfS, -halfS,  halfS), // 5 (Unique to P3)
+                new THREE.Vector3( halfS,  halfS,  halfS), // 6 (Apex)
+                new THREE.Vector3(-halfS,  halfS,  halfS)  // 7 (Unique to P2)
+            ];
+
+            renderMainCubePyramids();
+
+            // Clickable spheres
+            vertexSpheres = [];
+            const sphereGeo = new THREE.SphereGeometry(s * 0.08, 16, 16);
+
+            window.cubeCornerCoords.forEach((pt, idx) => {
+                // Highlight the 3 unique trigger vertices
+                const isUnique = [2, 7, 5].includes(idx);
+                const mat = new THREE.MeshPhongMaterial({ 
+                    color: isUnique ? 0xff4757 : 0x7f8c8d, 
+                    emissive: isUnique ? 0x330000 : 0x000000 
+                });
+                const sphere = new THREE.Mesh(sphereGeo, mat);
+                sphere.position.copy(pt);
+                sphere.userData = { index: idx };
+                cubeGroup.add(sphere);
+                vertexSpheres.push(sphere);
+            });
+
+            camera.position.set(s * 2.2, s * 2, s * 2.8);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+
+        function renderMainCubePyramids() {
+            const toRemove = cubeGroup.children.filter(c => c.type === "Mesh" && !c.userData.hasOwnProperty('index'));
+            toRemove.forEach(c => cubeGroup.remove(c));
+
+            remainingPyramids.forEach((pDef) => {
+                const geom = createPyramidGeometry(pDef.base, pDef.apex);
+                const mat = new THREE.MeshPhongMaterial({
+                    color: 0x70a1ff,
+                    transparent: true,
+                    opacity: 0.5,
+                    side: THREE.DoubleSide
+                });
+                const mesh = new THREE.Mesh(geom, mat);
+
+                // Add clean outer boundary lines (NO base diagonal)
+                const wireframe = createOuterEdgeLines(pDef.base, pDef.apex, window.cubeCornerCoords, 0x1e90ff);
+                mesh.add(wireframe);
+
+                cubeGroup.add(mesh);
+            });
+        }
+
+        function createPyramidGeometry(baseIndices, apexIndex) {
+            const coords = window.cubeCornerCoords;
+            const geom = new THREE.BufferGeometry();
+
+            const pBase = baseIndices.map(i => coords[i]);
+            const pApex = coords[apexIndex];
+
+            const vertices = new Float32Array([
+                // Base Face
+                pBase[0].x, pBase[0].y, pBase[0].z,
+                pBase[1].x, pBase[1].y, pBase[1].z,
+                pBase[2].x, pBase[2].y, pBase[2].z,
+
+                pBase[0].x, pBase[0].y, pBase[0].z,
+                pBase[2].x, pBase[2].y, pBase[2].z,
+                pBase[3].x, pBase[3].y, pBase[3].z,
+
+                // Side Triangular Faces
+                pBase[0].x, pBase[0].y, pBase[0].z,  pBase[1].x, pBase[1].y, pBase[1].z,  pApex.x, pApex.y, pApex.z,
+                pBase[1].x, pBase[1].y, pBase[1].z,  pBase[2].x, pBase[2].y, pBase[2].z,  pApex.x, pApex.y, pApex.z,
+                pBase[2].x, pBase[2].y, pBase[2].z,  pBase[3].x, pBase[3].y, pBase[3].z,  pApex.x, pApex.y, pApex.z,
+                pBase[3].x, pBase[3].y, pBase[3].z,  pBase[0].x, pBase[0].y, pBase[0].z,  pApex.x, pApex.y, pApex.z,
+            ]);
+
+            geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geom.computeVertexNormals();
+            return geom;
+        }
+
+        // Helper to draw clean 8 outer boundary edges (4 base edges + 4 side edges) without diagonal base lines
+        function createOuterEdgeLines(baseIndices, apexIndex, coords, colorHex) {
+            const points = [];
+            const pBase = baseIndices.map(i => coords[i]);
+            const pApex = coords[apexIndex];
+
+            // 4 Base Square Edges
+            points.push(pBase[0], pBase[1]);
+            points.push(pBase[1], pBase[2]);
+            points.push(pBase[2], pBase[3]);
+            points.push(pBase[3], pBase[0]);
+
+            // 4 Side Edges to Apex
+            points.push(pBase[0], pApex);
+            points.push(pBase[1], pApex);
+            points.push(pBase[2], pApex);
+            points.push(pBase[3], pApex);
+
+            const edgeGeom = new THREE.BufferGeometry().setFromPoints(points);
+            const edgeMat = new THREE.LineBasicMaterial({ color: colorHex, linewidth: 2 });
+            return new THREE.LineSegments(edgeGeom, edgeMat);
+        }
+
+        // --- Interaction Logic ---
+        function onVertexClick(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(vertexSpheres);
+
+            if (intersects.length > 0) {
+                const clickedIdx = intersects[0].object.userData.index;
+
+                // Check if clicked vertex is unique to a remaining pyramid
+                const matchedIndex = remainingPyramids.findIndex(p => p.uniqueVertex === clickedIdx);
+
+                if (matchedIndex !== -1) {
+                    // Extract pyramid directly on single vertex click
+                    remainingPyramids.splice(matchedIndex, 1);
+                    
+                    // Hide the unique vertex sphere after removal
+                    intersects[0].object.visible = false;
+
+                    addPyramidToShelf(extractedCount, pyramidColors[extractedCount]);
+                    
+                    extractedCount++;
+                    renderMainCubePyramids();
+
+                    if (extractedCount < 3) {
+                        updateFeedback(`Pyramid ${extractedCount} removed! Click another unique vertex.`, "success");
+                    } else {
+                        updateFeedback("All 3 square pyramids successfully extracted!", "success");
+                        document.getElementById('equation-display').style.display = 'block';
+                    }
+                } else {
+                    updateFeedback("Click a remaining unique vertex sphere (V2, V7, or V5) to remove a pyramid.", "error");
+                }
+            }
+        }
+
+        function updateFeedback(msg, type) {
+            const fb = document.getElementById('feedback');
+            fb.textContent = msg;
+            fb.className = `text-${type}`;
+        }
+
+        // --- Lower Shelf Scene Management ---
+        function initShelf() {
+            shelfScenes = [];
+            for (let i = 0; i < 3; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xffffff);
+
+                const camera = new THREE.PerspectiveCamera(40, slot.clientWidth / slot.clientHeight, 0.1, 100);
+                camera.position.set(sideLength * 2.0, sideLength * 1.6, sideLength * 2.4);
+                camera.lookAt(0, 0, 0);
+
+                const renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(slot.clientWidth, slot.clientHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                slot.appendChild(renderer.domElement);
+
+                // Orbit controls for shelf slot
+                const shelfControls = new THREE.OrbitControls(camera, renderer.domElement);
+                shelfControls.enableDamping = true;
+                shelfControls.dampingFactor = 0.05;
+
+                const shelfData = { 
+                    scene, 
+                    camera, 
+                    renderer, 
+                    controls: shelfControls, 
+                    mesh: null, 
+                    isUserInteracting: false 
+                };
+
+                shelfControls.addEventListener('start', () => {
+                    shelfData.isUserInteracting = true;
+                });
+
+                shelfScenes.push(shelfData);
+            }
+        }
+
+        function addPyramidToShelf(index, colorHex) {
+            const shelfObj = shelfScenes[index];
+            const s = sideLength;
+
+            const geom = new THREE.BufferGeometry();
+            
+            const vertices = new Float32Array([
+                // Base at Z = -s/2
+                -s/2, -s/2, -s/2,   s/2, -s/2, -s/2,   s/2,  s/2, -s/2,
+                -s/2, -s/2, -s/2,   s/2,  s/2, -s/2,  -s/2,  s/2, -s/2,
+
+                // Sides meeting at Apex (-s/2, -s/2, s/2)
+                -s/2, -s/2, -s/2,   s/2, -s/2, -s/2,  -s/2, -s/2,  s/2,
+                 s/2, -s/2, -s/2,   s/2,  s/2, -s/2,  -s/2, -s/2,  s/2,
+                 s/2,  s/2, -s/2,  -s/2,  s/2, -s/2,  -s/2, -s/2,  s/2,
+                -s/2,  s/2, -s/2,  -s/2, -s/2, -s/2,  -s/2, -s/2,  s/2
+            ]);
+
+            geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geom.computeVertexNormals();
+
+            const mat = new THREE.MeshPhongMaterial({
+                color: colorHex,
+                emissive: colorHex,
+                emissiveIntensity: 0.2,
+                specular: 0xffffff,
+                shininess: 30,
+                side: THREE.DoubleSide
+            });
+            
+            const mesh = new THREE.Mesh(geom, mat);
+
+            // Clean outer boundary edges (NO base diagonal line)
+            const shelfCoords = [
+                new THREE.Vector3(-s/2, -s/2, -s/2),
+                new THREE.Vector3( s/2, -s/2, -s/2),
+                new THREE.Vector3( s/2,  s/2, -s/2),
+                new THREE.Vector3(-s/2,  s/2, -s/2)
+            ];
+            const shelfApex = new THREE.Vector3(-s/2, -s/2, s/2);
+
+            const wireframe = createOuterEdgeLines([0, 1, 2, 3], 0, shelfCoords.concat(shelfApex), 0x2c3e50);
+            mesh.add(wireframe);
+
+            shelfObj.scene.add(mesh);
+            shelfObj.mesh = mesh;
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            controls.update();
+            renderer.render(scene, camera);
+
+            shelfScenes.forEach(sObj => {
+                sObj.controls.update();
+                
+                if (sObj.mesh && !sObj.isUserInteracting) {
+                    sObj.mesh.rotation.y += 0.012;
+                }
+                
+                sObj.renderer.render(sObj.scene, sObj.camera);
+            });
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('btn-generate').addEventListener('click', generateCube);
+
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('cube-canvas');
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+
+            shelfScenes.forEach((sObj, idx) => {
+                const slot = document.getElementById(`slot-${idx}`);
+                sObj.camera.aspect = slot.clientWidth / slot.clientHeight;
+                sObj.camera.updateProjectionMatrix();
+                sObj.renderer.setSize(slot.clientWidth, slot.clientHeight);
+            });
+        });
+
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html>
