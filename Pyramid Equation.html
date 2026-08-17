@@ -188,12 +188,12 @@
     </div>
 
     <div class="instructions">
-        <strong>Task:</strong> Click on a unique corner vertex to cut out and extract its square pyramid.
+        <strong>Task:</strong> Click on a red corner vertex adjacent to the yellow shared apex to extract its square pyramid.
         <div id="feedback" class="text-info">Click "Generate Cube" to start.</div>
     </div>
 
     <div class="canvas-container">
-        <div class="canvas-title">Main 3D Workspace (Click & Drag to Rotate | Click a Unique Red Vertex Sphere to Cut)</div>
+        <div class="canvas-title">Main 3D Workspace (Yellow Sphere = Shared Apex | Red Spheres = Unique Base Vertices)</div>
         <canvas id="cube-canvas"></canvas>
     </div>
 
@@ -216,14 +216,12 @@
         let sideLength = 4;
         let extractedCount = 0;
         
-        // Target Apex is Vertex 6. Each of the 3 pyramids has 1 unique corner vertex on its base face:
-        // Pyramid 1 (Base Z=0): Unique Vertex 2
-        // Pyramid 2 (Base X=0): Unique Vertex 7
-        // Pyramid 3 (Base Y=0): Unique Vertex 5
+        // Target Apex is Vertex 6 (Shared by all 3 pyramids).
+        // Adjacent unique base vertices: V2, V7, V5 (colored RED).
         const validPyramidsDef = [
-            { id: 0, uniqueVertex: 2, base: [0, 1, 2, 3], apex: 6, label: "Pyramid 1 (Base Z=0)" },
-            { id: 1, uniqueVertex: 7, base: [0, 3, 7, 4], apex: 6, label: "Pyramid 2 (Base X=0)" },
-            { id: 2, uniqueVertex: 5, base: [0, 1, 5, 4], apex: 6, label: "Pyramid 3 (Base Y=0)" }
+            { id: 0, uniqueVertex: 2, base: [0, 1, 2, 3], apex: 6 },
+            { id: 1, uniqueVertex: 7, base: [0, 3, 7, 4], apex: 6 },
+            { id: 2, uniqueVertex: 5, base: [0, 1, 5, 4], apex: 6 }
         ];
         let remainingPyramids = [];
 
@@ -289,9 +287,9 @@
             extractedCount = 0;
             remainingPyramids = JSON.parse(JSON.stringify(validPyramidsDef));
             document.getElementById('equation-display').style.display = 'none';
-            updateFeedback("Click a unique vertex to remove the square pyramid.", "info");
+            updateFeedback("Click a red vertex sphere to extract its square pyramid.", "info");
 
-            // Reset shelf scenes with upgraded high-intensity lighting and default camera views
+            // Reset shelf scenes
             shelfScenes.forEach(s => {
                 while(s.scene.children.length > 0){ 
                     s.scene.remove(s.scene.children[0]); 
@@ -324,26 +322,41 @@
             window.cubeCornerCoords = [
                 new THREE.Vector3(-halfS, -halfS, -halfS), // 0
                 new THREE.Vector3( halfS, -halfS, -halfS), // 1
-                new THREE.Vector3( halfS,  halfS, -halfS), // 2 (Unique to P1)
+                new THREE.Vector3( halfS,  halfS, -halfS), // 2 (Red - Unique Base Vertex)
                 new THREE.Vector3(-halfS,  halfS, -halfS), // 3
                 new THREE.Vector3(-halfS, -halfS,  halfS), // 4
-                new THREE.Vector3( halfS, -halfS,  halfS), // 5 (Unique to P3)
-                new THREE.Vector3( halfS,  halfS,  halfS), // 6 (Apex)
-                new THREE.Vector3(-halfS,  halfS,  halfS)  // 7 (Unique to P2)
+                new THREE.Vector3( halfS, -halfS,  halfS), // 5 (Red - Unique Base Vertex)
+                new THREE.Vector3( halfS,  halfS,  halfS), // 6 (Yellow Apex Vertex)
+                new THREE.Vector3(-halfS,  halfS,  halfS)  // 7 (Red - Unique Base Vertex)
             ];
 
             renderMainCubePyramids();
 
-            // Clickable spheres
+            // Render Vertex Spheres with explicit Color Coding:
+            // Vertex 6 = YELLOW (Shared Apex)
+            // Vertices 2, 7, 5 = RED (Adjacent Unique Base Corners)
+            // Other Vertices = GREY
             vertexSpheres = [];
             const sphereGeo = new THREE.SphereGeometry(s * 0.08, 16, 16);
 
             window.cubeCornerCoords.forEach((pt, idx) => {
-                // Highlight the 3 unique trigger vertices
-                const isUnique = [2, 7, 5].includes(idx);
+                let colorHex = 0x7f8c8d;
+                let emissiveHex = 0x000000;
+
+                if (idx === 6) {
+                    // Shared Apex Vertex (Yellow)
+                    colorHex = 0xf1c40f;
+                    emissiveHex = 0x554400;
+                } else if ([2, 7, 5].includes(idx)) {
+                    // Adjacent Base Vertices (Red)
+                    colorHex = 0xff4757;
+                    emissiveHex = 0x440000;
+                }
+
                 const mat = new THREE.MeshPhongMaterial({ 
-                    color: isUnique ? 0xff4757 : 0x7f8c8d, 
-                    emissive: isUnique ? 0x330000 : 0x000000 
+                    color: colorHex, 
+                    emissive: emissiveHex,
+                    shininess: 50
                 });
                 const sphere = new THREE.Mesh(sphereGeo, mat);
                 sphere.position.copy(pt);
@@ -371,7 +384,6 @@
                 });
                 const mesh = new THREE.Mesh(geom, mat);
 
-                // Add clean outer boundary lines (NO base diagonal)
                 const wireframe = createOuterEdgeLines(pDef.base, pDef.apex, window.cubeCornerCoords, 0x1e90ff);
                 mesh.add(wireframe);
 
@@ -408,19 +420,18 @@
             return geom;
         }
 
-        // Helper to draw clean 8 outer boundary edges (4 base edges + 4 side edges) without diagonal base lines
         function createOuterEdgeLines(baseIndices, apexIndex, coords, colorHex) {
             const points = [];
             const pBase = baseIndices.map(i => coords[i]);
             const pApex = coords[apexIndex];
 
-            // 4 Base Square Edges
+            // 4 Base Edges
             points.push(pBase[0], pBase[1]);
             points.push(pBase[1], pBase[2]);
             points.push(pBase[2], pBase[3]);
             points.push(pBase[3], pBase[0]);
 
-            // 4 Side Edges to Apex
+            // 4 Side Edges
             points.push(pBase[0], pApex);
             points.push(pBase[1], pApex);
             points.push(pBase[2], pApex);
@@ -443,14 +454,15 @@
             if (intersects.length > 0) {
                 const clickedIdx = intersects[0].object.userData.index;
 
-                // Check if clicked vertex is unique to a remaining pyramid
+                if (clickedIdx === 6) {
+                    updateFeedback("The yellow sphere is the shared apex of all 3 pyramids. Click one of the red corner vertices to extract a pyramid!", "info");
+                    return;
+                }
+
                 const matchedIndex = remainingPyramids.findIndex(p => p.uniqueVertex === clickedIdx);
 
                 if (matchedIndex !== -1) {
-                    // Extract pyramid directly on single vertex click
                     remainingPyramids.splice(matchedIndex, 1);
-                    
-                    // Hide the unique vertex sphere after removal
                     intersects[0].object.visible = false;
 
                     addPyramidToShelf(extractedCount, pyramidColors[extractedCount]);
@@ -459,13 +471,13 @@
                     renderMainCubePyramids();
 
                     if (extractedCount < 3) {
-                        updateFeedback(`Pyramid ${extractedCount} removed! Click another unique vertex.`, "success");
+                        updateFeedback(`Pyramid ${extractedCount} removed! Click another red vertex.`, "success");
                     } else {
                         updateFeedback("All 3 square pyramids successfully extracted!", "success");
                         document.getElementById('equation-display').style.display = 'block';
                     }
                 } else {
-                    updateFeedback("Click a remaining unique vertex sphere (V2, V7, or V5) to remove a pyramid.", "error");
+                    updateFeedback("Click a remaining red corner vertex (V2, V7, or V5) to remove its pyramid.", "error");
                 }
             }
         }
@@ -493,7 +505,6 @@
                 renderer.setPixelRatio(window.devicePixelRatio);
                 slot.appendChild(renderer.domElement);
 
-                // Orbit controls for shelf slot
                 const shelfControls = new THREE.OrbitControls(camera, renderer.domElement);
                 shelfControls.enableDamping = true;
                 shelfControls.dampingFactor = 0.05;
@@ -547,7 +558,6 @@
             
             const mesh = new THREE.Mesh(geom, mat);
 
-            // Clean outer boundary edges (NO base diagonal line)
             const shelfCoords = [
                 new THREE.Vector3(-s/2, -s/2, -s/2),
                 new THREE.Vector3( s/2, -s/2, -s/2),
