@@ -182,8 +182,8 @@
     <p class="subtitle">Interactively dissect a cube into three congruent square pyramids where the apex is directly above one corner of the square base.</p>
 
     <div class="controls">
-        <label for="cube-size">Cube Side Length (a):</label>
-        <input type="number" id="cube-size" value="4" min="2" max="10" step="1">
+        <!-- <label for="cube-size">Cube Side Length (a):</label>
+        <input type="number" id="cube-size" value="4" min="2" max="10" step="1"> -->
         <button id="btn-generate">Generate Cube</button>
     </div>
 
@@ -198,7 +198,7 @@
     </div>
 
     <div id="extracted-container">
-        <div class="canvas-title">Extracted Pyramids Row (Click & Drag Any Pyramid Below to Rotate)</div>
+        <div class="canvas-title">Extracted Pyramids (Click & Drag Any Pyramid Below to Rotate)</div>
         <div id="pyramids-shelf">
             <div class="shelf-slot" id="slot-0"></div>
             <div class="shelf-slot" id="slot-1"></div>
@@ -281,7 +281,7 @@
 
         // --- Cube & Vertex Generation ---
         function generateCube() {
-            sideLength = parseFloat(document.getElementById('cube-size').value) || 4;
+            sideLength = 4;
             
             // Reset state
             extractedCount = 0;
