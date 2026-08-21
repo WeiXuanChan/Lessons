@@ -40,7 +40,7 @@
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
       width: 100%;
-      max-width: 650px;
+      max-width: 1100px;
       padding: 30px;
     }
 
@@ -97,6 +97,34 @@
       cursor: pointer;
     }
 
+    /* Two-Column Workspace Layout */
+    .workspace-layout {
+      display: flex;
+      gap: 25px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+
+    .left-column {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right-column {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 768px) {
+      .workspace-layout {
+        flex-direction: column;
+      }
+    }
+
     /* Button Styling */
     button {
       width: 100%;
@@ -114,6 +142,11 @@
 
     button:hover {
       background-color: var(--primary-hover);
+    }
+
+    button:disabled {
+      background-color: var(--disabled) !important;
+      cursor: not-allowed !important;
     }
 
     .btn-secondary {
@@ -152,6 +185,77 @@
       margin-top: 10px;
     }
 
+    /* Drawing Space Styles */
+    .draw-section {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .draw-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .draw-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    .draw-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .draw-btn {
+      width: auto;
+      padding: 4px 10px;
+      margin-bottom: 0;
+      font-size: 0.8rem;
+      background-color: #e2e8f0;
+      color: var(--text);
+    }
+
+    .draw-btn:hover {
+      background-color: #cbd5e1;
+    }
+
+    .canvas-container {
+      width: 100%;
+      flex: 1;
+      min-height: 320px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: #ffffff;
+      touch-action: none;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 8px;
+      cursor: crosshair;
+    }
+
+    canvas.disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .print-draw-image {
+      display: none;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
     /* Form Controls */
     .input-section {
       display: flex;
@@ -169,7 +273,7 @@
     .input-label {
       font-size: 1rem;
       font-weight: bold;
-      min-width: 80px;
+      white-space: nowrap;
     }
 
     input[type="text"] {
@@ -183,6 +287,12 @@
 
     input[type="text"]:focus {
       border-color: var(--primary);
+    }
+
+    input[type="text"]:disabled {
+      background-color: #f1f5f9;
+      color: #64748b;
+      cursor: not-allowed;
     }
 
     /* Feedback Display */
@@ -256,11 +366,16 @@
         padding: 0;
       }
 
+      .workspace-layout {
+        display: block;
+      }
+
       .difficulty-section,
       #generateBtn,
       #submitBtn,
       #savePdfBtn,
-      .input-section {
+      .input-section,
+      .draw-controls {
         display: none !important;
       }
 
@@ -270,6 +385,16 @@
 
       .question-box {
         border: 1px solid #cbd5e1;
+      }
+
+      .canvas-container {
+        display: none !important;
+      }
+
+      .print-draw-image {
+        display: block !important;
+        margin-top: 15px;
+        margin-bottom: 15px;
       }
 
       .feedback {
@@ -303,27 +428,50 @@
     <!-- 2. Generate Question Button -->
     <button id="generateBtn">Generate Question</button>
 
-    <!-- 3. Question Area -->
-    <div class="question-box">
-      <div class="question-prompt" id="questionPrompt">Click "Generate Question" to begin.</div>
-      <div class="equation-display" id="equationDisplay"></div>
-    </div>
+    <!-- Two-Column Workspace Wrapper -->
+    <div class="workspace-layout">
+      <!-- Left Column: Questions & Input -->
+      <div class="left-column">
+        <!-- 3. Question Area -->
+        <div class="question-box">
+          <div class="question-prompt" id="questionPrompt">Click "Generate Question" to begin.</div>
+          <div class="equation-display" id="equationDisplay"></div>
+        </div>
 
-    <!-- 4. Answer Input Area -->
-    <div class="input-section" id="inputSection" style="display: none;">
-      <div class="input-row" id="rowPart1_1" style="display:none;">
-        <span class="input-label" id="labelPart1_1">(i) = </span>
-        <input type="text" id="answerPart1_1" placeholder="Expression in terms of x" />
+        <!-- 4. Answer Input Area -->
+        <div class="input-section" id="inputSection" style="display: none;">
+          <div class="input-row" id="rowPart1_1" style="display:none;">
+            <span class="input-label" id="labelPart1_1">(Part 1 i) : </span>
+            <input type="text" id="answerPart1_1" placeholder="Expression in terms of x" />
+          </div>
+          <div class="input-row" id="rowPart1_2" style="display:none;">
+            <span class="input-label" id="labelPart1_2">(Part 1 ii) : </span>
+            <input type="text" id="answerPart1_2" placeholder="Expression in terms of x" />
+          </div>
+          <div class="input-row" id="rowPart2">
+            <span class="input-label" id="labelPart2">(Part 2) : </span>
+            <input type="text" id="answerPart2" placeholder="Final numerical value" />
+          </div>
+          <button id="submitBtn" style="margin-top: 10px; margin-bottom: 0;">Submit</button>
+        </div>
       </div>
-      <div class="input-row" id="rowPart1_2" style="display:none;">
-        <span class="input-label" id="labelPart1_2">(ii) = </span>
-        <input type="text" id="answerPart1_2" placeholder="Expression in terms of x" />
+
+      <!-- Right Column: Drawing Space Scratchpad -->
+      <div class="right-column">
+        <div class="draw-section" id="drawSection" style="display: none;">
+          <div class="draw-header">
+            <span class="draw-title">Working Space (Draw / Scratchpad):</span>
+            <div class="draw-controls">
+              <button type="button" class="draw-btn" id="undoDrawBtn">Undo</button>
+              <button type="button" class="draw-btn" id="clearDrawBtn">Clear</button>
+            </div>
+          </div>
+          <div class="canvas-container">
+            <canvas id="workingCanvas"></canvas>
+          </div>
+          <img id="printDrawImage" class="print-draw-image" alt="Student Working Drawing" />
+        </div>
       </div>
-      <div class="input-row" id="rowPart2">
-        <span class="input-label" id="labelPart2">Answer = </span>
-        <input type="text" id="answerPart2" placeholder="Final numerical value" />
-      </div>
-      <button id="submitBtn" style="margin-top: 10px; margin-bottom: 0;">Submit</button>
     </div>
 
     <!-- Summary of student's submitted answer (Visible during PDF export) -->
@@ -338,8 +486,9 @@
 
   <script>
     // State Variables
-    let currentMode = 1; // 1: Basic, 2: Intermediate, 3: Advance
+    let currentMode = 1;
     let currentProblem = null;
+    let isSubmitted = false;
     const variables = ['x', 'y', 'a', 'p', 'b'];
 
     // DOM Elements
@@ -369,11 +518,123 @@
     const savePdfBtn = document.getElementById('savePdfBtn');
     const studentAnswerSummary = document.getElementById('studentAnswerSummary');
 
+    // Drawing Canvas Setup
+    const drawSection = document.getElementById('drawSection');
+    const canvas = document.getElementById('workingCanvas');
+    const ctx = canvas.getContext('2d');
+    const clearDrawBtn = document.getElementById('clearDrawBtn');
+    const undoDrawBtn = document.getElementById('undoDrawBtn');
+    const printDrawImage = document.getElementById('printDrawImage');
+
+    let isDrawing = false;
+    let strokeHistory = [];
+    let currentStroke = [];
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        redrawCanvas();
+      }
+    }
+
+    function getCanvasCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      if (isSubmitted) return;
+      isDrawing = true;
+      const pos = getCanvasCoordinates(e);
+      currentStroke = [{ x: pos.x, y: pos.y }];
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    function draw(e) {
+      if (!isDrawing || isSubmitted) return;
+      e.preventDefault();
+      const pos = getCanvasCoordinates(e);
+      currentStroke.push({ x: pos.x, y: pos.y });
+
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#0f172a';
+
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      if (currentStroke.length > 0) {
+        strokeHistory.push([...currentStroke]);
+        currentStroke = [];
+      }
+    }
+
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#0f172a';
+
+      strokeHistory.forEach(stroke => {
+        if (stroke.length < 2) return;
+        ctx.beginPath();
+        ctx.moveTo(stroke[0].x, stroke[0].y);
+        for (let i = 1; i < stroke.length; i++) {
+          ctx.lineTo(stroke[i].x, stroke[i].y);
+        }
+        ctx.stroke();
+      });
+    }
+
+    function clearCanvas() {
+      if (isSubmitted) return;
+      strokeHistory = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function undoCanvas() {
+      if (isSubmitted) return;
+      strokeHistory.pop();
+      redrawCanvas();
+    }
+
+    function syncPrintImage() {
+      printDrawImage.src = canvas.toDataURL('image/png');
+    }
+
+    // Canvas Events
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+
+    clearDrawBtn.addEventListener('click', clearCanvas);
+    undoDrawBtn.addEventListener('click', undoCanvas);
+    window.addEventListener('resize', resizeCanvas);
+
     // Handle Slider Mode Selection
     slider.addEventListener('input', (e) => {
       let val = parseInt(e.target.value);
       if (val === 3) {
-        val = 2; // Lock Advance mode
+        val = 2;
         slider.value = 2;
       }
       currentMode = val;
@@ -536,8 +797,8 @@
         let t2_a = getRandomInt(1, 3);
         let t2_b = getRandomInt(-4, 4);
 
-        let int1 = getRandomInt(3, 6); // bags of int1
-        let int2 = getRandomInt(3, 6); // bags of int2
+        let int1 = getRandomInt(3, 6);
+        let int2 = getRandomInt(3, 6);
 
         let pack2Opt = Math.random() < 0.5 ? `bags of ${int2}` : `packed into ${int2} bags`;
         let left1 = getRandomInt(1, int1 - 1);
@@ -643,16 +904,15 @@
           t3_a, t3_b, exprBC, L, m1, m2, final_a, final_b
         };
       } 
-      else { // percentage
+      else {
         let discountPct = getRandomInt(30, 40);
         let sellPct = getRandomInt(80, 90);
 
         let profitPct = sellPct - (100 - discountPct);
         
-        let targetX = getRandomInt(100, 500) * 10; // Original price
+        let targetX = getRandomInt(100, 500) * 10;
         let profit = (profitPct / 100) * targetX;
 
-        // Simplify fractions for bought and sell percentages
         let buyNum = 100 - discountPct;
         let buyDen = 100;
         let gBuy = gcd(buyNum, buyDen);
@@ -665,7 +925,6 @@
         sellNum /= gSell;
         sellDen /= gSell;
 
-        // Expressed in bracketed fraction format: (a/b)x
         let buyExpr = buyDen === 1 ? `${buyNum}x` : `(${buyNum}/${buyDen})x`;
         let sellExpr = sellDen === 1 ? `${sellNum}x` : `(${sellNum}/${sellDen})x`;
 
@@ -695,13 +954,25 @@
 
     // Generate Button Handler
     generateBtn.addEventListener('click', () => {
+      isSubmitted = false;
       feedbackBox.style.display = 'none';
       feedbackBox.className = 'feedback';
       studentAnswerSummary.style.display = 'none';
       
+      // Re-enable inputs & canvas controls
+      answerPart1_1.disabled = false;
+      answerPart1_2.disabled = false;
+      answerPart2.disabled = false;
+      submitBtn.disabled = false;
+      undoDrawBtn.disabled = false;
+      clearDrawBtn.disabled = false;
+      canvas.classList.remove('disabled');
+
       answerPart1_1.value = '';
       answerPart1_2.value = '';
       answerPart2.value = '';
+
+      clearCanvas();
 
       if (currentMode === 1) {
         currentProblem = generateBasicProblem();
@@ -723,21 +994,40 @@
         rowPart1_2.style.display = 'flex';
         rowPart2.style.display = 'flex';
 
-        labelPart1_1.textContent = "(i) = ";
-        labelPart1_2.textContent = "(ii) = ";
-        labelPart2.textContent = "(Part 2) = ";
+        labelPart1_1.textContent = "(Part 1 i) : ";
+        labelPart1_2.textContent = "(Part 1 ii) : ";
+        labelPart2.textContent = "(Part 2) : ";
         answerPart2.placeholder = currentProblem.type === 'percentage' ? "e.g. 1500.00" : "Numerical value";
       }
 
+      drawSection.style.display = 'flex';
       inputSection.style.display = 'flex';
       savePdfBtn.style.display = 'block';
+
+      setTimeout(resizeCanvas, 50);
     });
 
     // Submit Answer Handler
     submitBtn.addEventListener('click', checkAnswer);
 
     function checkAnswer() {
-      if (!currentProblem) return;
+      if (!currentProblem || isSubmitted) return;
+
+      // Force-finish active stroke if the student clicked submit while drawing
+      stopDrawing();
+
+      // Lock answers and controls
+      isSubmitted = true;
+      answerPart1_1.disabled = true;
+      answerPart1_2.disabled = true;
+      answerPart2.disabled = true;
+      submitBtn.disabled = true;
+      undoDrawBtn.disabled = true;
+      clearDrawBtn.disabled = true;
+      canvas.classList.add('disabled');
+
+      // Refresh print canvas image immediately
+      syncPrintImage();
 
       feedbackBox.style.display = 'block';
 
@@ -794,12 +1084,11 @@
         let c2 = normalizeExpr(currentProblem.ans1_2);
         let c3 = currentProblem.ans2.replace(/\s+/g, '');
 
-        // Allow loose numeric match for Part 2 if student omitted decimals or added $ symbol
         let isCorrect3 = (u3 === c3) || (parseFloat(u3.replace('$', '')) === parseFloat(c3));
         let isCorrect1 = (u1 === c1);
         let isCorrect2 = (u2 === c2);
 
-        studentAnswerSummary.innerHTML = `Student Answers: (i) ${answerPart1_1.value || '-'}, (ii) ${answerPart1_2.value || '-'}, (Part 2) ${answerPart2.value || '-'}`;
+        studentAnswerSummary.innerHTML = `Student Answers: (Part 1 i) ${answerPart1_1.value || '-'}, (Part 1 ii) ${answerPart1_2.value || '-'}, (Part 2) ${answerPart2.value || '-'}`;
 
         if (isCorrect1 && isCorrect2 && isCorrect3) {
           feedbackBox.className = 'feedback correct';
@@ -861,7 +1150,7 @@
                 </li>
               </ol>
             `;
-          } else { // percentage
+          } else {
             workingHtml = `
               <div class="feedback-heading">Incorrect / Partial Correct.</div>
               <div><b>Correct Part 1:</b> (i) <span class="math-text">${p.ans1_1}</span>, (ii) <span class="math-text">${p.ans1_2}</span></div>
@@ -894,8 +1183,15 @@
 
     // Save PDF Handler
     savePdfBtn.addEventListener('click', () => {
+      stopDrawing();
+      syncPrintImage();
       window.print();
     });
+
+    window.onbeforeprint = () => {
+      stopDrawing();
+      syncPrintImage();
+    };
   </script>
 </body>
 </html>
