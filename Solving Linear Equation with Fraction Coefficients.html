@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solving Linear Equations with Fractional Coefficients</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #0284c7;
+      --secondary-hover: #0369a1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --error: #dc2626;
+      --disabled: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 650px;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-top: 0;
+      margin-bottom: 25px;
+    }
+
+    /* Difficulty Slider Styling */
+    .difficulty-section {
+      margin-bottom: 25px;
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .difficulty-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .difficulty-labels span {
+      flex: 1;
+      text-align: center;
+      color: var(--disabled);
+      cursor: pointer;
+    }
+
+    .difficulty-labels span.active {
+      color: var(--primary);
+    }
+
+    .slider {
+      width: 100%;
+      appearance: none;
+      height: 8px;
+      border-radius: 5px;
+      background: #cbd5e1;
+      outline: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+
+    /* Button Styling */
+    button {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-bottom: 20px;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      margin-top: 15px;
+      margin-bottom: 0;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--secondary-hover);
+    }
+
+    /* Question Box Styling */
+    .question-box {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .question-prompt {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .equation-display {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .part-title {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    /* Form Controls */
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .input-label {
+      font-size: 1rem;
+      font-weight: bold;
+      min-width: 80px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px 15px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+    /* Feedback Display */
+    .feedback {
+      border-radius: 8px;
+      padding: 15px;
+      display: none;
+    }
+
+    .feedback.correct {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #dcfce7;
+      color: var(--success);
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+
+    .feedback.incorrect {
+      display: block;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .feedback-heading {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--error);
+    }
+
+    .working-steps {
+      margin-top: 10px;
+      padding-left: 20px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .working-steps li {
+      margin-bottom: 8px;
+    }
+
+    .math-text {
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+      background-color: rgba(255, 255, 255, 0.6);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .student-answer-summary {
+      display: none;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    /* PRINT / SAVE PDF STYLES */
+    @media print {
+      body {
+        background-color: #ffffff;
+        padding: 0;
+      }
+
+      .container {
+        box-shadow: none;
+        border: none;
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .difficulty-section,
+      #generateBtn,
+      #submitBtn,
+      #savePdfBtn,
+      .input-section {
+        display: none !important;
+      }
+
+      .student-answer-summary {
+        display: block !important;
+      }
+
+      .question-box {
+        border: 1px solid #cbd5e1;
+      }
+
+      .feedback {
+        display: block !important;
+        border: 1px solid #cbd5e1;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+      }
+
+      .feedback-heading {
+        color: var(--error);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Linear Equations Practice</h1>
+
+    <!-- 1. Difficulty Slider -->
+    <div class="difficulty-section">
+      <div class="difficulty-labels">
+        <span id="labelBasic" class="active">Basic</span>
+        <span id="labelInter">Intermediate</span>
+        <span id="labelAdvance" class="disabled">Advance</span>
+      </div>
+      <input type="range" min="1" max="3" value="1" class="slider" id="difficultySlider">
+    </div>
+
+    <!-- 2. Generate Question Button -->
+    <button id="generateBtn">Generate Question</button>
+
+    <!-- 3. Question Area -->
+    <div class="question-box">
+      <div class="question-prompt" id="questionPrompt">Click "Generate Question" to begin.</div>
+      <div class="equation-display" id="equationDisplay"></div>
+    </div>
+
+    <!-- 4. Answer Input Area -->
+    <div class="input-section" id="inputSection" style="display: none;">
+      <div class="input-row" id="rowPart1_1" style="display:none;">
+        <span class="input-label" id="labelPart1_1">(i) = </span>
+        <input type="text" id="answerPart1_1" placeholder="Expression in terms of x" />
+      </div>
+      <div class="input-row" id="rowPart1_2" style="display:none;">
+        <span class="input-label" id="labelPart1_2">(ii) = </span>
+        <input type="text" id="answerPart1_2" placeholder="Expression in terms of x" />
+      </div>
+      <div class="input-row" id="rowPart2">
+        <span class="input-label" id="labelPart2">Answer = </span>
+        <input type="text" id="answerPart2" placeholder="Final numerical value" />
+      </div>
+      <button id="submitBtn" style="margin-top: 10px; margin-bottom: 0;">Submit</button>
+    </div>
+
+    <!-- Summary of student's submitted answer (Visible during PDF export) -->
+    <div class="student-answer-summary" id="studentAnswerSummary"></div>
+
+    <!-- 5. Feedback / Working Steps Area -->
+    <div class="feedback" id="feedbackBox"></div>
+
+    <!-- 6. Save PDF Button -->
+    <button id="savePdfBtn" class="btn-secondary" style="display: none;">Save PDF</button>
+  </div>
+
+  <script>
+    // State Variables
+    let currentMode = 1; // 1: Basic, 2: Intermediate, 3: Advance
+    let currentProblem = null;
+    const variables = ['x', 'y', 'a', 'p', 'b'];
+
+    // DOM Elements
+    const slider = document.getElementById('difficultySlider');
+    const labelBasic = document.getElementById('labelBasic');
+    const labelInter = document.getElementById('labelInter');
+    const labelAdvance = document.getElementById('labelAdvance');
+    const generateBtn = document.getElementById('generateBtn');
+    const questionPrompt = document.getElementById('questionPrompt');
+    const equationDisplay = document.getElementById('equationDisplay');
+    const inputSection = document.getElementById('inputSection');
+    
+    const rowPart1_1 = document.getElementById('rowPart1_1');
+    const rowPart1_2 = document.getElementById('rowPart1_2');
+    const rowPart2 = document.getElementById('rowPart2');
+    
+    const labelPart1_1 = document.getElementById('labelPart1_1');
+    const labelPart1_2 = document.getElementById('labelPart1_2');
+    const labelPart2 = document.getElementById('labelPart2');
+    
+    const answerPart1_1 = document.getElementById('answerPart1_1');
+    const answerPart1_2 = document.getElementById('answerPart1_2');
+    const answerPart2 = document.getElementById('answerPart2');
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const feedbackBox = document.getElementById('feedbackBox');
+    const savePdfBtn = document.getElementById('savePdfBtn');
+    const studentAnswerSummary = document.getElementById('studentAnswerSummary');
+
+    // Handle Slider Mode Selection
+    slider.addEventListener('input', (e) => {
+      let val = parseInt(e.target.value);
+      if (val === 3) {
+        val = 2; // Lock Advance mode
+        slider.value = 2;
+      }
+      currentMode = val;
+      
+      labelBasic.className = currentMode === 1 ? 'active' : '';
+      labelInter.className = currentMode === 2 ? 'active' : '';
+      labelAdvance.className = 'disabled';
+    });
+
+    // Helper Math Functions
+    function getRandomInt(min, max, excludeZero = false) {
+      let val = 0;
+      while (val === 0) {
+        val = Math.floor(Math.random() * (max - min + 1)) + min;
+        if (!excludeZero) break;
+      }
+      return val;
+    }
+
+    function gcd(a, b) {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      while (b) {
+        let t = b;
+        b = a % b;
+        a = t;
+      }
+      return a;
+    }
+
+    function lcm(a, b) {
+      return (a * b) / gcd(a, b);
+    }
+
+    function simplifyFraction(num, den) {
+      if (den < 0) {
+        num = -num;
+        den = -den;
+      }
+      const g = gcd(num, den);
+      num /= g;
+      den /= g;
+      if (den === 1) return `${num}`;
+      return `${num}/${den}`;
+    }
+
+    function formatCurrency(val) {
+      return Number(val).toFixed(2);
+    }
+
+    function formatVariableTerm(coeff, variable) {
+      if (coeff === 1) return variable;
+      if (coeff === -1) return `-${variable}`;
+      return `${coeff}${variable}`;
+    }
+
+    function cleanExpr(a, b, v = 'x') {
+      let str = "";
+      if (a !== 0) str += formatVariableTerm(a, v);
+      if (b !== 0) {
+        if (b > 0 && str !== "") str += " + " + b;
+        else if (b > 0 && str === "") str += b;
+        else if (b < 0 && str !== "") str += " - " + Math.abs(b);
+        else if (b < 0 && str === "") str += "-" + Math.abs(b);
+      }
+      if (str === "") str = "0";
+      return str;
+    }
+
+    function normalizeExpr(str) {
+      return str.replace(/[\s\(\)\$]+/g, '').toLowerCase();
+    }
+
+    // BASIC PROBLEM GENERATOR
+    function generateBasicProblem() {
+      const v = variables[Math.floor(Math.random() * variables.length)];
+      const denomCount = Math.random() < 0.5 ? 1 : 2;
+      
+      let d1 = getRandomInt(2, 6);
+      let d2 = denomCount === 2 ? getRandomInt(2, 6) : 1;
+      
+      let num1_a = getRandomInt(-3, 3, true);
+      let num1_b = getRandomInt(-5, 5);
+      
+      let num2_a = denomCount === 2 ? getRandomInt(-3, 3) : 0;
+      let num2_b = getRandomInt(-5, 5);
+
+      let rhs_a = getRandomInt(-3, 3);
+      let rhs_b = getRandomInt(-5, 5);
+
+      const lhs_total_coeff_num = (num1_a * d2) + (num2_a * d1);
+      const total_coeff = lhs_total_coeff_num - (rhs_a * d1 * d2);
+
+      if (total_coeff === 0) return generateBasicProblem();
+
+      let lhsStr = "";
+      let term1Str = `(${cleanExpr(num1_a, num1_b, v)})/${d1}`;
+      
+      if (denomCount === 2) {
+        let term2Str = `(${cleanExpr(num2_a, num2_b, v)})/${d2}`;
+        lhsStr = `${term1Str} + ${term2Str}`;
+      } else {
+        let term2Val = num2_b;
+        if (term2Val > 0) lhsStr = `${term1Str} + ${term2Val}`;
+        else if (term2Val < 0) lhsStr = `${term1Str} - ${Math.abs(term2Val)}`;
+        else lhsStr = term1Str;
+      }
+
+      let rhsStr = cleanExpr(rhs_a, rhs_b, v);
+
+      const L = denomCount === 2 ? lcm(d1, d2) : d1;
+      const m1 = L / d1;
+      const m2 = denomCount === 2 ? L / d2 : L;
+
+      let clearedLhsStr = `${m1 === 1 ? "" : m1}(${cleanExpr(num1_a, num1_b, v)})`;
+      if (denomCount === 2) {
+        clearedLhsStr += ` + ${m2 === 1 ? "" : m2}(${cleanExpr(num2_a, num2_b, v)})`;
+      } else if (num2_b !== 0) {
+        let term2Val = m2 * num2_b;
+        clearedLhsStr += term2Val > 0 ? ` + ${term2Val}` : ` - ${Math.abs(term2Val)}`;
+      }
+
+      let clearedRhsStr = (rhs_a === 0 && rhs_b === 0) ? "0" : (L === 1 ? rhsStr : `${L}(${rhsStr})`);
+      let clearedFractionEquation = `${clearedLhsStr} = ${clearedRhsStr}`;
+
+      let expanded_lhs_a = (m1 * num1_a) + (denomCount === 2 ? m2 * num2_a : 0);
+      let expanded_lhs_b = (m1 * num1_b) + (denomCount === 2 ? m2 * num2_b : m2 * num2_b);
+      let expanded_rhs_a = L * rhs_a;
+      let expanded_rhs_b = L * rhs_b;
+
+      let final_a = expanded_lhs_a - expanded_rhs_a;
+      let final_b = expanded_rhs_b - expanded_lhs_b;
+
+      const correctAnsStr = simplifyFraction(final_b, final_a);
+
+      return {
+        mode: 'basic',
+        v, d1, d2: denomCount === 2 ? d2 : null, denomCount, L,
+        num1_a, num1_b, num2_a, num2_b, rhs_a, rhs_b, m1, m2,
+        clearedFractionEquation,
+        expanded_lhs_a, expanded_lhs_b, expanded_rhs_a, expanded_rhs_b,
+        final_a, final_b,
+        equationStr: `${lhsStr} = ${rhsStr}`,
+        correctAnsStr
+      };
+    }
+
+    // INTERMEDIATE PROBLEM GENERATOR
+    function generateIntermediateProblem() {
+      const qTypes = ['fruits', 'speed', 'percentage'];
+      const chosenType = qTypes[Math.floor(Math.random() * qTypes.length)];
+
+      if (chosenType === 'fruits') {
+        const fruitsList = ["apples", "oranges", "pears", "lemons"];
+        let f1 = fruitsList[Math.floor(Math.random() * fruitsList.length)];
+        let f2 = fruitsList.filter(f => f !== f1)[Math.floor(Math.random() * (fruitsList.length - 1))];
+
+        let t1_a = getRandomInt(1, 3);
+        let t1_b = getRandomInt(-4, 4);
+        let t2_a = getRandomInt(1, 3);
+        let t2_b = getRandomInt(-4, 4);
+
+        let int1 = getRandomInt(3, 6); // bags of int1
+        let int2 = getRandomInt(3, 6); // bags of int2
+
+        let pack2Opt = Math.random() < 0.5 ? `bags of ${int2}` : `packed into ${int2} bags`;
+        let left1 = getRandomInt(1, int1 - 1);
+        let left2 = getRandomInt(1, int2 - 1);
+        let totalBags = getRandomInt(10, 25);
+
+        let targetX = getRandomInt(10, 30);
+        let num1_val = (int1 * getRandomInt(3, 8)) + left1;
+        let num2_val = (int2 * getRandomInt(3, 8)) + left2;
+
+        t1_b = num1_val - (t1_a * targetX);
+        t2_b = num2_val - (t2_a * targetX);
+
+        let bags1 = (num1_val - left1) / int1;
+        let bags2 = (num2_val - left2) / int2;
+        totalBags = bags1 + bags2;
+
+        let expr1 = cleanExpr(t1_a, t1_b, 'x');
+        let expr2 = cleanExpr(t2_a, t2_b, 'x');
+
+        let text = `There are ${expr1} ${f1} and ${expr2} ${f2}. When the ${f1} are packed into bags of ${int1} and ${f2} are ${pack2Opt}, there is a total of ${totalBags} bags with ${left1} ${f1} and ${left2} ${f2} left over.<br><br>` +
+                   `<div class="part-title">(Part 1)</div> Write an expression, in terms of x, for the number of bags of (i) ${f1} and (ii) ${f2}.<br>` +
+                   `<div class="part-title">(Part 2)</div> Find the total number of fruits.`;
+
+        let totalFruits = num1_val + num2_val;
+
+        let eq_n1_b = t1_b - left1;
+        let eq_n2_b = t2_b - left2;
+
+        let bagExpr1 = `(${cleanExpr(t1_a, eq_n1_b, 'x')})/${int1}`;
+        let bagExpr2 = `(${cleanExpr(t2_a, eq_n2_b, 'x')})/${int2}`;
+
+        let L = lcm(int1, int2);
+        let m1 = L / int1;
+        let m2 = L / int2;
+
+        let final_a = (m1 * t1_a) + (m2 * t2_a);
+        let final_b = (totalBags * L) - (m1 * eq_n1_b) - (m2 * eq_n2_b);
+
+        return {
+          mode: 'intermediate',
+          type: 'fruits',
+          questionHtml: text,
+          ans1_1: bagExpr1,
+          ans1_2: bagExpr2,
+          ans2: `${totalFruits}`,
+          targetX,
+          f1, f2, int1, int2, left1, left2, totalBags,
+          t1_a, t1_b, t2_a, t2_b, expr1, expr2, eq_n1_b, eq_n2_b, L, m1, m2, final_a, final_b, totalFruits
+        };
+      } 
+      else if (chosenType === 'speed') {
+        let speed1 = getRandomInt(40, 80);
+        let speed2 = getRandomInt(40, 80);
+        let isSameSpeed = Math.random() < 0.5;
+        if (isSameSpeed) speed2 = speed1;
+
+        let targetX = getRandomInt(60, 180);
+        let t3_a = getRandomInt(1, 2);
+        let t3_b = getRandomInt(-20, 20);
+        let distBC = (t3_a * targetX) + t3_b;
+        if (distBC <= 20) {
+          t3_b = 30;
+          distBC = (t3_a * targetX) + t3_b;
+        }
+
+        let time1_hrs = targetX / speed1;
+        let time2_hrs = distBC / speed2;
+        
+        let totalMinutes = Math.round((time1_hrs + time2_hrs) * 60);
+        let hoursPart = Math.floor(totalMinutes / 60);
+        let minsPart = totalMinutes % 60;
+        let timeStr = `${hoursPart} h ${minsPart} min`;
+
+        let exprBC = cleanExpr(t3_a, t3_b, 'x');
+
+        let sentence2 = isSameSpeed 
+          ? `A car travels from Town A to Town B, then to Town C at a speed of ${speed1} km/h.`
+          : `A car travels from Town A to Town B at a speed of ${speed1} km/h, then it travels from Town B to Town C at a speed of ${speed2} km/h.`;
+
+        let text = `Town A and Town B are x km apart and Town C is ${exprBC} km from Town B. ${sentence2}<br><br>` +
+                   `<div class="part-title">(Part 1)</div> Write an expression, in terms of x hours, the travelling time (i) from Town A to Town B (ii) from Town B to Town C.<br>` +
+                   `<div class="part-title">(Part 2)</div> The total travelling time is ${timeStr}. Find the distance between Town A and Town B.`;
+
+        let term1Expr = `x/${speed1}`;
+        let term2Expr = `(${exprBC})/${speed2}`;
+
+        let L = lcm(speed1, speed2);
+        let m1 = L / speed1;
+        let m2 = L / speed2;
+        let final_a = m1 + (m2 * t3_a);
+        let totalTimeVal = (totalMinutes / 60);
+        let final_b = (totalTimeVal * L) - (m2 * t3_b);
+
+        return {
+          mode: 'intermediate',
+          type: 'speed',
+          questionHtml: text,
+          ans1_1: term1Expr,
+          ans1_2: term2Expr,
+          ans2: `${targetX}`,
+          targetX, speed1, speed2, isSameSpeed, timeStr, totalMinutes,
+          t3_a, t3_b, exprBC, L, m1, m2, final_a, final_b
+        };
+      } 
+      else { // percentage
+        let discountPct = getRandomInt(30, 40);
+        let sellPct = getRandomInt(80, 90);
+
+        let profitPct = sellPct - (100 - discountPct);
+        
+        let targetX = getRandomInt(100, 500) * 10; // Original price
+        let profit = (profitPct / 100) * targetX;
+
+        // Simplify fractions for bought and sell percentages
+        let buyNum = 100 - discountPct;
+        let buyDen = 100;
+        let gBuy = gcd(buyNum, buyDen);
+        buyNum /= gBuy;
+        buyDen /= gBuy;
+
+        let sellNum = sellPct;
+        let sellDen = 100;
+        let gSell = gcd(sellNum, sellDen);
+        sellNum /= gSell;
+        sellDen /= gSell;
+
+        // Expressed in bracketed fraction format: (a/b)x
+        let buyExpr = buyDen === 1 ? `${buyNum}x` : `(${buyNum}/${buyDen})x`;
+        let sellExpr = sellDen === 1 ? `${sellNum}x` : `(${sellNum}/${sellDen})x`;
+
+        let formattedProfit = formatCurrency(profit);
+        let formattedTargetX = formatCurrency(targetX);
+
+        let text = `A piece of furniture is originally selling for $x. During a ${discountPct}% discount sale, Mr Tan bought it. He then sells it at ${sellPct}% of the original price.<br><br>` +
+                   `<div class="part-title">(Part 1)</div> Write an expression, in terms of x, the price of the furniture Mr Tan (i) bought for and (ii) sells for.<br>` +
+                   `<div class="part-title">(Part 2)</div> The profit Mr Tan made is $${formattedProfit}. Find the original selling price of the furniture.`;
+
+        let rawProfitFrac = simplifyFraction(profitPct, 100);
+        let profitFrac = rawProfitFrac.includes('/') ? `(${rawProfitFrac})` : rawProfitFrac;
+
+        return {
+          mode: 'intermediate',
+          type: 'percentage',
+          questionHtml: text,
+          ans1_1: buyExpr,
+          ans1_2: sellExpr,
+          ans2: `${formattedTargetX}`,
+          targetX, formattedTargetX, formattedProfit,
+          discountPct, sellPct, profit, profitPct, profitFrac,
+          buyNum, buyDen, sellNum, sellDen
+        };
+      }
+    }
+
+    // Generate Button Handler
+    generateBtn.addEventListener('click', () => {
+      feedbackBox.style.display = 'none';
+      feedbackBox.className = 'feedback';
+      studentAnswerSummary.style.display = 'none';
+      
+      answerPart1_1.value = '';
+      answerPart1_2.value = '';
+      answerPart2.value = '';
+
+      if (currentMode === 1) {
+        currentProblem = generateBasicProblem();
+        questionPrompt.textContent = "Solve the following equation:";
+        equationDisplay.innerHTML = `<div style="text-align:center; font-size: 1.4rem; font-weight:bold;">${currentProblem.equationStr}</div>`;
+        
+        rowPart1_1.style.display = 'none';
+        rowPart1_2.style.display = 'none';
+        rowPart2.style.display = 'flex';
+        
+        labelPart2.textContent = `${currentProblem.v} = `;
+        answerPart2.placeholder = "e.g. 5 or -3/4";
+      } else {
+        currentProblem = generateIntermediateProblem();
+        questionPrompt.textContent = "Answer the following question:";
+        equationDisplay.innerHTML = currentProblem.questionHtml;
+
+        rowPart1_1.style.display = 'flex';
+        rowPart1_2.style.display = 'flex';
+        rowPart2.style.display = 'flex';
+
+        labelPart1_1.textContent = "(i) = ";
+        labelPart1_2.textContent = "(ii) = ";
+        labelPart2.textContent = "(Part 2) = ";
+        answerPart2.placeholder = currentProblem.type === 'percentage' ? "e.g. 1500.00" : "Numerical value";
+      }
+
+      inputSection.style.display = 'flex';
+      savePdfBtn.style.display = 'block';
+    });
+
+    // Submit Answer Handler
+    submitBtn.addEventListener('click', checkAnswer);
+
+    function checkAnswer() {
+      if (!currentProblem) return;
+
+      feedbackBox.style.display = 'block';
+
+      if (currentProblem.mode === 'basic') {
+        let userAns = answerPart2.value.trim().replace(/\s+/g, '');
+        let correctAns = currentProblem.correctAnsStr;
+
+        studentAnswerSummary.innerHTML = `Student Answer: <span class="math-text">${currentProblem.v} = ${userAns || 'No answer'}</span>`;
+
+        if (userAns === correctAns) {
+          feedbackBox.className = 'feedback correct';
+          feedbackBox.innerHTML = '&#10004; Correct!';
+        } else {
+          feedbackBox.className = 'feedback incorrect';
+          const p = currentProblem;
+          const lcmText = p.denomCount === 2 
+            ? `Find the lowest common multiple (LCM) of denominators ${p.d1} and ${p.d2}, which is <b>${p.L}</b>.`
+            : `Identify the single denominator: <b>${p.d1}</b>.`;
+
+          let rearrangedLhs = formatVariableTerm(p.final_a, p.v);
+          let divideStep = (p.final_a === 1) 
+            ? `<b>Result:</b><br><span class="math-text">${p.v} = ${p.correctAnsStr}</span>`
+            : `<b>Divide both sides by the coefficient of <span class="math-text">${p.v}</span> (${p.final_a}):</b><br><span class="math-text">${p.v} = ${p.correctAnsStr}</span>`;
+
+          let expRhs = `${p.expanded_rhs_a !== 0 ? formatVariableTerm(p.expanded_rhs_a, p.v) : ''} ${p.expanded_rhs_b >= 0 ? (p.expanded_rhs_a !== 0 ? '+ ' : '') + p.expanded_rhs_b : '- ' + Math.abs(p.expanded_rhs_b)}`;
+
+          feedbackBox.innerHTML = `
+            <div class="feedback-heading">Incorrect.</div>
+            <div><b>Correct Answer:</b> <span class="math-text">${p.v} = ${p.correctAnsStr}</span></div>
+            <br>
+            <b>Step-by-step Working:</b>
+            <ol class="working-steps">
+              <li><b>Find LCM / Denominator:</b> ${lcmText}</li>
+              <li><b>Clear fractions:</b> Multiply both sides by <b>${p.L}</b>:<br>
+                  <span class="math-text">${p.clearedFractionEquation}</span>
+              </li>
+              <li><b>Expand:</b> Apply distributive law:<br>
+                  <span class="math-text">${formatVariableTerm(p.expanded_lhs_a, p.v)} ${p.expanded_lhs_b >= 0 ? '+ ' + p.expanded_lhs_b : '- ' + Math.abs(p.expanded_lhs_b)} = ${expRhs}</span>
+              </li>
+              <li><b>Rearrange terms:</b> Collect terms with <span class="math-text">${p.v}</span> on LHS and constants on RHS:<br>
+                  <span class="math-text">${rearrangedLhs} = ${p.final_b}</span>
+              </li>
+              <li>${divideStep}</li>
+            </ol>
+          `;
+        }
+      } 
+      else { // INTERMEDIATE MODE
+        let u1 = normalizeExpr(answerPart1_1.value);
+        let u2 = normalizeExpr(answerPart1_2.value);
+        let u3 = answerPart2.value.trim().replace(/\s+/g, '');
+
+        let c1 = normalizeExpr(currentProblem.ans1_1);
+        let c2 = normalizeExpr(currentProblem.ans1_2);
+        let c3 = currentProblem.ans2.replace(/\s+/g, '');
+
+        // Allow loose numeric match for Part 2 if student omitted decimals or added $ symbol
+        let isCorrect3 = (u3 === c3) || (parseFloat(u3.replace('$', '')) === parseFloat(c3));
+        let isCorrect1 = (u1 === c1);
+        let isCorrect2 = (u2 === c2);
+
+        studentAnswerSummary.innerHTML = `Student Answers: (i) ${answerPart1_1.value || '-'}, (ii) ${answerPart1_2.value || '-'}, (Part 2) ${answerPart2.value || '-'}`;
+
+        if (isCorrect1 && isCorrect2 && isCorrect3) {
+          feedbackBox.className = 'feedback correct';
+          feedbackBox.innerHTML = '&#10004; Correct!';
+        } else {
+          feedbackBox.className = 'feedback incorrect';
+          let p = currentProblem;
+          let workingHtml = "";
+
+          if (p.type === 'fruits') {
+            workingHtml = `
+              <div class="feedback-heading">Incorrect / Partial Correct.</div>
+              <div><b>Correct Part 1:</b> (i) <span class="math-text">${p.ans1_1}</span>, (ii) <span class="math-text">${p.ans1_2}</span></div>
+              <div><b>Correct Part 2:</b> Total Fruits = <span class="math-text">${p.ans2}</span></div>
+              <br>
+              <b>Step-by-step Working:</b>
+              <ol class="working-steps">
+                <li><b>Form expressions for number of bags:</b><br>
+                    Number of ${p.f1} bags = <span class="math-text">(${p.expr1} - ${p.left1}) / ${p.int1} = ${p.ans1_1}</span><br>
+                    Number of ${p.f2} bags = <span class="math-text">(${p.expr2} - ${p.left2}) / ${p.int2} = ${p.ans1_2}</span>
+                </li>
+                <li><b>Form total bags equation:</b><br>
+                    <span class="math-text">${p.ans1_1} + ${p.ans1_2} = ${p.totalBags}</span>
+                </li>
+                <li><b>Find LCM of denominators:</b> LCM(${p.int1}, ${p.int2}) = <b>${p.L}</b>.</li>
+                <li><b>Clear fractions:</b> Multiply whole equation by ${p.L}:<br>
+                    <span class="math-text">${p.m1}(${cleanExpr(p.t1_a, p.eq_n1_b)}) + ${p.m2}(${cleanExpr(p.t2_a, p.eq_n2_b)}) = ${p.totalBags * p.L}</span>
+                </li>
+                <li><b>Expand and solve for x:</b><br>
+                    <span class="math-text">${p.final_a}x = ${p.final_a * p.targetX}</span> &rArr; <span class="math-text">x = ${p.targetX}</span>
+                </li>
+                <li><b>Calculate Total Fruits:</b><br>
+                    ${p.f1}: <span class="math-text">${p.expr1} = ${p.t1_a}(${p.targetX}) + ${p.t1_b} = ${(p.t1_a*p.targetX)+p.t1_b}</span><br>
+                    ${p.f2}: <span class="math-text">${p.expr2} = ${p.t2_a}(${p.targetX}) + ${p.t2_b} = ${(p.t2_a*p.targetX)+p.t2_b}</span><br>
+                    Total = <span class="math-text">${p.totalFruits}</span>
+                </li>
+              </ol>
+            `;
+          } else if (p.type === 'speed') {
+            workingHtml = `
+              <div class="feedback-heading">Incorrect / Partial Correct.</div>
+              <div><b>Correct Part 1:</b> (i) <span class="math-text">${p.ans1_1}</span> hours, (ii) <span class="math-text">${p.ans1_2}</span> hours</div>
+              <div><b>Correct Part 2:</b> Distance AB = <span class="math-text">${p.ans2} km</span></div>
+              <br>
+              <b>Step-by-step Working:</b>
+              <ol class="working-steps">
+                <li><b>Convert total time to hours:</b><br>
+                    ${p.timeStr} = <span class="math-text">${p.totalMinutes}/60 = ${simplifyFraction(p.totalMinutes, 60)} hours</span>.
+                </li>
+                <li><b>Form equation for total travelling time:</b><br>
+                    <span class="math-text">x/${p.speed1} + (${p.exprBC})/${p.speed2} = ${simplifyFraction(p.totalMinutes, 60)}</span>
+                </li>
+                <li><b>Find LCM of denominators:</b> LCM(${p.speed1}, ${p.speed2}) = <b>${p.L}</b>.</li>
+                <li><b>Clear fractions:</b> Multiply both sides by ${p.L}:<br>
+                    <span class="math-text">${p.m1}x + ${p.m2}(${p.exprBC}) = ${(p.totalMinutes/60)*p.L}</span>
+                </li>
+                <li><b>Expand and solve for x:</b><br>
+                    <span class="math-text">${p.final_a}x = ${p.final_a * p.targetX}</span> &rArr; <span class="math-text">x = ${p.targetX} km</span>
+                </li>
+              </ol>
+            `;
+          } else { // percentage
+            workingHtml = `
+              <div class="feedback-heading">Incorrect / Partial Correct.</div>
+              <div><b>Correct Part 1:</b> (i) <span class="math-text">${p.ans1_1}</span>, (ii) <span class="math-text">${p.ans1_2}</span></div>
+              <div><b>Correct Part 2:</b> Original Price = <span class="math-text">$${p.ans2}</span></div>
+              <br>
+              <b>Step-by-step Working:</b>
+              <ol class="working-steps">
+                <li><b>Express buying and selling prices in terms of x:</b><br>
+                    Bought price = <span class="math-text">(100 - ${p.discountPct})% of x = ${p.ans1_1}</span><br>
+                    Selling price = <span class="math-text">${p.sellPct}% of x = ${p.ans1_2}</span>
+                </li>
+                <li><b>Form profit equation:</b><br>
+                    Profit = Selling Price - Bought Price<br>
+                    <span class="math-text">${p.ans1_2} - ${p.ans1_1} = $${p.formattedProfit}</span>
+                </li>
+                <li><b>Simplify equation:</b><br>
+                    <span class="math-text">${p.profitFrac}x = $${p.formattedProfit}</span>
+                </li>
+                <li><b>Solve for x:</b><br>
+                    <span class="math-text">x = $${p.formattedProfit} &divide; (${p.profitPct}/100) = $${p.formattedTargetX}</span>
+                </li>
+              </ol>
+            `;
+          }
+
+          feedbackBox.innerHTML = workingHtml;
+        }
+      }
+    }
+
+    // Save PDF Handler
+    savePdfBtn.addEventListener('click', () => {
+      window.print();
+    });
+  </script>
+</body>
+</html>
