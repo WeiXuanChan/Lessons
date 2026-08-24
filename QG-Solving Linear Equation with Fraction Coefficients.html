@@ -40,7 +40,7 @@
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
       width: 100%;
-      max-width: 1100px;
+      max-width: 650px;
       padding: 30px;
     }
 
@@ -97,34 +97,6 @@
       cursor: pointer;
     }
 
-    /* Two-Column Workspace Layout */
-    .workspace-layout {
-      display: flex;
-      gap: 25px;
-      align-items: stretch;
-      margin-bottom: 20px;
-    }
-
-    .left-column {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .right-column {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    @media (max-width: 768px) {
-      .workspace-layout {
-        flex-direction: column;
-      }
-    }
-
     /* Button Styling */
     button {
       width: 100%;
@@ -142,11 +114,6 @@
 
     button:hover {
       background-color: var(--primary-hover);
-    }
-
-    button:disabled {
-      background-color: var(--disabled) !important;
-      cursor: not-allowed !important;
     }
 
     .btn-secondary {
@@ -185,77 +152,6 @@
       margin-top: 10px;
     }
 
-    /* Drawing Space Styles */
-    .draw-section {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .draw-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .draw-title {
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: var(--text);
-    }
-
-    .draw-controls {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .draw-btn {
-      width: auto;
-      padding: 4px 10px;
-      margin-bottom: 0;
-      font-size: 0.8rem;
-      background-color: #e2e8f0;
-      color: var(--text);
-    }
-
-    .draw-btn:hover {
-      background-color: #cbd5e1;
-    }
-
-    .canvas-container {
-      width: 100%;
-      flex: 1;
-      min-height: 320px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background-color: #ffffff;
-      touch-action: none;
-      position: relative;
-    }
-
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      border-radius: 8px;
-      cursor: crosshair;
-    }
-
-    canvas.disabled {
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
-
-    .print-draw-image {
-      display: none;
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-
     /* Form Controls */
     .input-section {
       display: flex;
@@ -273,7 +169,7 @@
     .input-label {
       font-size: 1rem;
       font-weight: bold;
-      white-space: nowrap;
+      min-width: 80px;
     }
 
     input[type="text"] {
@@ -287,12 +183,6 @@
 
     input[type="text"]:focus {
       border-color: var(--primary);
-    }
-
-    input[type="text"]:disabled {
-      background-color: #f1f5f9;
-      color: #64748b;
-      cursor: not-allowed;
     }
 
     /* Feedback Display */
@@ -366,16 +256,11 @@
         padding: 0;
       }
 
-      .workspace-layout {
-        display: block;
-      }
-
       .difficulty-section,
       #generateBtn,
       #submitBtn,
       #savePdfBtn,
-      .input-section,
-      .draw-controls {
+      .input-section {
         display: none !important;
       }
 
@@ -385,16 +270,6 @@
 
       .question-box {
         border: 1px solid #cbd5e1;
-      }
-
-      .canvas-container {
-        display: none !important;
-      }
-
-      .print-draw-image {
-        display: block !important;
-        margin-top: 15px;
-        margin-bottom: 15px;
       }
 
       .feedback {
@@ -428,50 +303,27 @@
     <!-- 2. Generate Question Button -->
     <button id="generateBtn">Generate Question</button>
 
-    <!-- Two-Column Workspace Wrapper -->
-    <div class="workspace-layout">
-      <!-- Left Column: Questions & Input -->
-      <div class="left-column">
-        <!-- 3. Question Area -->
-        <div class="question-box">
-          <div class="question-prompt" id="questionPrompt">Click "Generate Question" to begin.</div>
-          <div class="equation-display" id="equationDisplay"></div>
-        </div>
+    <!-- 3. Question Area -->
+    <div class="question-box">
+      <div class="question-prompt" id="questionPrompt">Click "Generate Question" to begin.</div>
+      <div class="equation-display" id="equationDisplay"></div>
+    </div>
 
-        <!-- 4. Answer Input Area -->
-        <div class="input-section" id="inputSection" style="display: none;">
-          <div class="input-row" id="rowPart1_1" style="display:none;">
-            <span class="input-label" id="labelPart1_1">(Part 1 i) : </span>
-            <input type="text" id="answerPart1_1" placeholder="Expression in terms of x" />
-          </div>
-          <div class="input-row" id="rowPart1_2" style="display:none;">
-            <span class="input-label" id="labelPart1_2">(Part 1 ii) : </span>
-            <input type="text" id="answerPart1_2" placeholder="Expression in terms of x" />
-          </div>
-          <div class="input-row" id="rowPart2">
-            <span class="input-label" id="labelPart2">(Part 2) : </span>
-            <input type="text" id="answerPart2" placeholder="Final numerical value" />
-          </div>
-          <button id="submitBtn" style="margin-top: 10px; margin-bottom: 0;">Submit</button>
-        </div>
+    <!-- 4. Answer Input Area -->
+    <div class="input-section" id="inputSection" style="display: none;">
+      <div class="input-row" id="rowPart1_1" style="display:none;">
+        <span class="input-label" id="labelPart1_1">(i) = </span>
+        <input type="text" id="answerPart1_1" placeholder="Expression in terms of x" />
       </div>
-
-      <!-- Right Column: Drawing Space Scratchpad -->
-      <div class="right-column">
-        <div class="draw-section" id="drawSection" style="display: none;">
-          <div class="draw-header">
-            <span class="draw-title">Working Space (Draw / Scratchpad):</span>
-            <div class="draw-controls">
-              <button type="button" class="draw-btn" id="undoDrawBtn">Undo</button>
-              <button type="button" class="draw-btn" id="clearDrawBtn">Clear</button>
-            </div>
-          </div>
-          <div class="canvas-container">
-            <canvas id="workingCanvas"></canvas>
-          </div>
-          <img id="printDrawImage" class="print-draw-image" alt="Student Working Drawing" />
-        </div>
+      <div class="input-row" id="rowPart1_2" style="display:none;">
+        <span class="input-label" id="labelPart1_2">(ii) = </span>
+        <input type="text" id="answerPart1_2" placeholder="Expression in terms of x" />
       </div>
+      <div class="input-row" id="rowPart2">
+        <span class="input-label" id="labelPart2">Answer = </span>
+        <input type="text" id="answerPart2" placeholder="Final numerical value" />
+      </div>
+      <button id="submitBtn" style="margin-top: 10px; margin-bottom: 0;">Submit</button>
     </div>
 
     <!-- Summary of student's submitted answer (Visible during PDF export) -->
@@ -486,9 +338,8 @@
 
   <script>
     // State Variables
-    let currentMode = 1;
+    let currentMode = 1; // 1: Basic, 2: Intermediate, 3: Advance
     let currentProblem = null;
-    let isSubmitted = false;
     const variables = ['x', 'y', 'a', 'p', 'b'];
 
     // DOM Elements
@@ -518,123 +369,11 @@
     const savePdfBtn = document.getElementById('savePdfBtn');
     const studentAnswerSummary = document.getElementById('studentAnswerSummary');
 
-    // Drawing Canvas Setup
-    const drawSection = document.getElementById('drawSection');
-    const canvas = document.getElementById('workingCanvas');
-    const ctx = canvas.getContext('2d');
-    const clearDrawBtn = document.getElementById('clearDrawBtn');
-    const undoDrawBtn = document.getElementById('undoDrawBtn');
-    const printDrawImage = document.getElementById('printDrawImage');
-
-    let isDrawing = false;
-    let strokeHistory = [];
-    let currentStroke = [];
-
-    function resizeCanvas() {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-        redrawCanvas();
-      }
-    }
-
-    function getCanvasCoordinates(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    }
-
-    function startDrawing(e) {
-      if (isSubmitted) return;
-      isDrawing = true;
-      const pos = getCanvasCoordinates(e);
-      currentStroke = [{ x: pos.x, y: pos.y }];
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-    }
-
-    function draw(e) {
-      if (!isDrawing || isSubmitted) return;
-      e.preventDefault();
-      const pos = getCanvasCoordinates(e);
-      currentStroke.push({ x: pos.x, y: pos.y });
-
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#0f172a';
-
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-    }
-
-    function stopDrawing() {
-      if (!isDrawing) return;
-      isDrawing = false;
-      if (currentStroke.length > 0) {
-        strokeHistory.push([...currentStroke]);
-        currentStroke = [];
-      }
-    }
-
-    function redrawCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#0f172a';
-
-      strokeHistory.forEach(stroke => {
-        if (stroke.length < 2) return;
-        ctx.beginPath();
-        ctx.moveTo(stroke[0].x, stroke[0].y);
-        for (let i = 1; i < stroke.length; i++) {
-          ctx.lineTo(stroke[i].x, stroke[i].y);
-        }
-        ctx.stroke();
-      });
-    }
-
-    function clearCanvas() {
-      if (isSubmitted) return;
-      strokeHistory = [];
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function undoCanvas() {
-      if (isSubmitted) return;
-      strokeHistory.pop();
-      redrawCanvas();
-    }
-
-    function syncPrintImage() {
-      printDrawImage.src = canvas.toDataURL('image/png');
-    }
-
-    // Canvas Events
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseleave', stopDrawing);
-
-    canvas.addEventListener('touchstart', startDrawing, { passive: false });
-    canvas.addEventListener('touchmove', draw, { passive: false });
-    canvas.addEventListener('touchend', stopDrawing);
-
-    clearDrawBtn.addEventListener('click', clearCanvas);
-    undoDrawBtn.addEventListener('click', undoCanvas);
-    window.addEventListener('resize', resizeCanvas);
-
     // Handle Slider Mode Selection
     slider.addEventListener('input', (e) => {
       let val = parseInt(e.target.value);
       if (val === 3) {
-        val = 2;
+        val = 2; // Lock Advance mode
         slider.value = 2;
       }
       currentMode = val;
@@ -706,6 +445,12 @@
 
     function normalizeExpr(str) {
       return str.replace(/[\s\(\)\$]+/g, '').toLowerCase();
+    }
+
+    function to3SF(num) {
+      const n = Number(num);
+      if (isNaN(n)) return `${num}`;
+      return `${parseFloat(n.toPrecision(3))}`;
     }
 
     // BASIC PROBLEM GENERATOR
@@ -797,24 +542,27 @@
         let t2_a = getRandomInt(1, 3);
         let t2_b = getRandomInt(-4, 4);
 
-        let int1 = getRandomInt(3, 6);
-        let int2 = getRandomInt(3, 6);
+        let int1 = getRandomInt(3, 6); // bags of int1
+        let int2 = getRandomInt(3, 6); // bags of int2
 
-        let pack2Opt = Math.random() < 0.5 ? `bags of ${int2}` : `packed into ${int2} bags`;
+        let isPackedFixed = Math.random() < 0.5;
+        let pack2Opt = isPackedFixed ? `packed into ${int2} bags` : `bags of ${int2}`;
         let left1 = getRandomInt(1, int1 - 1);
         let left2 = getRandomInt(1, int2 - 1);
-        let totalBags = getRandomInt(10, 25);
 
         let targetX = getRandomInt(10, 30);
-        let num1_val = (int1 * getRandomInt(3, 8)) + left1;
-        let num2_val = (int2 * getRandomInt(3, 8)) + left2;
+        
+        let bags2 = isPackedFixed ? int2 : getRandomInt(3, 8);
+        let num2_val = isPackedFixed ? ((t2_a * targetX) + t2_b) : (int2 * bags2) + left2;
+        if (!isPackedFixed) {
+          t2_b = num2_val - (t2_a * targetX);
+        }
 
+        let bags1 = getRandomInt(3, 8);
+        let num1_val = (int1 * bags1) + left1;
         t1_b = num1_val - (t1_a * targetX);
-        t2_b = num2_val - (t2_a * targetX);
 
-        let bags1 = (num1_val - left1) / int1;
-        let bags2 = (num2_val - left2) / int2;
-        totalBags = bags1 + bags2;
+        let totalBags = bags1 + bags2;
 
         let expr1 = cleanExpr(t1_a, t1_b, 'x');
         let expr2 = cleanExpr(t2_a, t2_b, 'x');
@@ -824,19 +572,26 @@
                    `<div class="part-title">(Part 2)</div> Find the total number of fruits.`;
 
         let totalFruits = num1_val + num2_val;
-
         let eq_n1_b = t1_b - left1;
         let eq_n2_b = t2_b - left2;
 
         let bagExpr1 = `(${cleanExpr(t1_a, eq_n1_b, 'x')})/${int1}`;
-        let bagExpr2 = `(${cleanExpr(t2_a, eq_n2_b, 'x')})/${int2}`;
+        let bagExpr2 = isPackedFixed ? `${int2}` : `(${cleanExpr(t2_a, eq_n2_b, 'x')})/${int2}`;
 
-        let L = lcm(int1, int2);
-        let m1 = L / int1;
-        let m2 = L / int2;
-
-        let final_a = (m1 * t1_a) + (m2 * t2_a);
-        let final_b = (totalBags * L) - (m1 * eq_n1_b) - (m2 * eq_n2_b);
+        let L, m1, m2, final_a, final_b;
+        if (isPackedFixed) {
+          L = int1;
+          m1 = 1;
+          m2 = 1;
+          final_a = t1_a;
+          final_b = (totalBags - int2) * int1 - eq_n1_b;
+        } else {
+          L = lcm(int1, int2);
+          m1 = L / int1;
+          m2 = L / int2;
+          final_a = (m1 * t1_a) + (m2 * t2_a);
+          final_b = (totalBags * L) - (m1 * eq_n1_b) - (m2 * eq_n2_b);
+        }
 
         return {
           mode: 'intermediate',
@@ -846,7 +601,7 @@
           ans1_2: bagExpr2,
           ans2: `${totalFruits}`,
           targetX,
-          f1, f2, int1, int2, left1, left2, totalBags,
+          f1, f2, int1, int2, left1, left2, totalBags, isPackedFixed,
           t1_a, t1_b, t2_a, t2_b, expr1, expr2, eq_n1_b, eq_n2_b, L, m1, m2, final_a, final_b, totalFruits
         };
       } 
@@ -881,7 +636,7 @@
 
         let text = `Town A and Town B are x km apart and Town C is ${exprBC} km from Town B. ${sentence2}<br><br>` +
                    `<div class="part-title">(Part 1)</div> Write an expression, in terms of x hours, the travelling time (i) from Town A to Town B (ii) from Town B to Town C.<br>` +
-                   `<div class="part-title">(Part 2)</div> The total travelling time is ${timeStr}. Find the distance between Town A and Town B.`;
+                   `<div class="part-title">(Part 2)</div> The total travelling time is ${timeStr}. Find the distance between Town A and Town B, giving your answer to 3 significant figures.`;
 
         let term1Expr = `x/${speed1}`;
         let term2Expr = `(${exprBC})/${speed2}`;
@@ -893,6 +648,8 @@
         let totalTimeVal = (totalMinutes / 60);
         let final_b = (totalTimeVal * L) - (m2 * t3_b);
 
+        let ans3SF = to3SF(targetX);
+
         return {
           mode: 'intermediate',
           type: 'speed',
@@ -900,19 +657,21 @@
           ans1_1: term1Expr,
           ans1_2: term2Expr,
           ans2: `${targetX}`,
+          ans2_3sf: ans3SF,
           targetX, speed1, speed2, isSameSpeed, timeStr, totalMinutes,
           t3_a, t3_b, exprBC, L, m1, m2, final_a, final_b
         };
       } 
-      else {
+      else { // percentage
         let discountPct = getRandomInt(30, 40);
         let sellPct = getRandomInt(80, 90);
 
         let profitPct = sellPct - (100 - discountPct);
         
-        let targetX = getRandomInt(100, 500) * 10;
+        let targetX = getRandomInt(100, 500) * 10; // Original price
         let profit = (profitPct / 100) * targetX;
 
+        // Simplify fractions for bought and sell percentages
         let buyNum = 100 - discountPct;
         let buyDen = 100;
         let gBuy = gcd(buyNum, buyDen);
@@ -925,6 +684,7 @@
         sellNum /= gSell;
         sellDen /= gSell;
 
+        // Expressed in bracketed fraction format: (a/b)x
         let buyExpr = buyDen === 1 ? `${buyNum}x` : `(${buyNum}/${buyDen})x`;
         let sellExpr = sellDen === 1 ? `${sellNum}x` : `(${sellNum}/${sellDen})x`;
 
@@ -954,25 +714,13 @@
 
     // Generate Button Handler
     generateBtn.addEventListener('click', () => {
-      isSubmitted = false;
       feedbackBox.style.display = 'none';
       feedbackBox.className = 'feedback';
       studentAnswerSummary.style.display = 'none';
       
-      // Re-enable inputs & canvas controls
-      answerPart1_1.disabled = false;
-      answerPart1_2.disabled = false;
-      answerPart2.disabled = false;
-      submitBtn.disabled = false;
-      undoDrawBtn.disabled = false;
-      clearDrawBtn.disabled = false;
-      canvas.classList.remove('disabled');
-
       answerPart1_1.value = '';
       answerPart1_2.value = '';
       answerPart2.value = '';
-
-      clearCanvas();
 
       if (currentMode === 1) {
         currentProblem = generateBasicProblem();
@@ -994,40 +742,21 @@
         rowPart1_2.style.display = 'flex';
         rowPart2.style.display = 'flex';
 
-        labelPart1_1.textContent = "(Part 1 i) : ";
-        labelPart1_2.textContent = "(Part 1 ii) : ";
-        labelPart2.textContent = "(Part 2) : ";
+        labelPart1_1.textContent = "(i) = ";
+        labelPart1_2.textContent = "(ii) = ";
+        labelPart2.textContent = "(Part 2) = ";
         answerPart2.placeholder = currentProblem.type === 'percentage' ? "e.g. 1500.00" : "Numerical value";
       }
 
-      drawSection.style.display = 'flex';
       inputSection.style.display = 'flex';
       savePdfBtn.style.display = 'block';
-
-      setTimeout(resizeCanvas, 50);
     });
 
     // Submit Answer Handler
     submitBtn.addEventListener('click', checkAnswer);
 
     function checkAnswer() {
-      if (!currentProblem || isSubmitted) return;
-
-      // Force-finish active stroke if the student clicked submit while drawing
-      stopDrawing();
-
-      // Lock answers and controls
-      isSubmitted = true;
-      answerPart1_1.disabled = true;
-      answerPart1_2.disabled = true;
-      answerPart2.disabled = true;
-      submitBtn.disabled = true;
-      undoDrawBtn.disabled = true;
-      clearDrawBtn.disabled = true;
-      canvas.classList.add('disabled');
-
-      // Refresh print canvas image immediately
-      syncPrintImage();
+      if (!currentProblem) return;
 
       feedbackBox.style.display = 'block';
 
@@ -1084,11 +813,19 @@
         let c2 = normalizeExpr(currentProblem.ans1_2);
         let c3 = currentProblem.ans2.replace(/\s+/g, '');
 
-        let isCorrect3 = (u3 === c3) || (parseFloat(u3.replace('$', '')) === parseFloat(c3));
+        let isCorrect3 = false;
+        if (currentProblem.type === 'speed') {
+          let c3_3sf = currentProblem.ans2_3sf.replace(/\s+/g, '');
+          let userVal = parseFloat(u3);
+          isCorrect3 = (u3 === c3) || (u3 === c3_3sf) || (!isNaN(userVal) && userVal === parseFloat(c3)) || (!isNaN(userVal) && userVal === parseFloat(c3_3sf));
+        } else {
+          isCorrect3 = (u3 === c3) || (parseFloat(u3.replace('$', '')) === parseFloat(c3));
+        }
+
         let isCorrect1 = (u1 === c1);
         let isCorrect2 = (u2 === c2);
 
-        studentAnswerSummary.innerHTML = `Student Answers: (Part 1 i) ${answerPart1_1.value || '-'}, (Part 1 ii) ${answerPart1_2.value || '-'}, (Part 2) ${answerPart2.value || '-'}`;
+        studentAnswerSummary.innerHTML = `Student Answers: (i) ${answerPart1_1.value || '-'}, (ii) ${answerPart1_2.value || '-'}, (Part 2) ${answerPart2.value || '-'}`;
 
         if (isCorrect1 && isCorrect2 && isCorrect3) {
           feedbackBox.className = 'feedback correct';
@@ -1099,6 +836,22 @@
           let workingHtml = "";
 
           if (p.type === 'fruits') {
+            let part2BagStep = p.isPackedFixed 
+              ? `Number of ${p.f2} bags = <span class="math-text">${p.ans1_2}</span> (given as ${p.int2} bags)`
+              : `Number of ${p.f2} bags = <span class="math-text">(${p.expr2} - ${p.left2}) / ${p.int2} = ${p.ans1_2}</span>`;
+
+            let equationFormStep = p.isPackedFixed 
+              ? `<span class="math-text">${p.ans1_1} + ${p.int2} = ${p.totalBags}</span> &rArr; <span class="math-text">${p.ans1_1} = ${p.totalBags - p.int2}</span>`
+              : `<span class="math-text">${p.ans1_1} + ${p.ans1_2} = ${p.totalBags}</span>`;
+
+            let clearFractionStep = p.isPackedFixed
+              ? `Multiply both sides by ${p.int1}:<br><span class="math-text">${cleanExpr(p.t1_a, p.eq_n1_b)} = ${(p.totalBags - p.int2) * p.int1}</span>`
+              : `Multiply whole equation by ${p.L}:<br><span class="math-text">${p.m1}(${cleanExpr(p.t1_a, p.eq_n1_b)}) + ${p.m2}(${cleanExpr(p.t2_a, p.eq_n2_b)}) = ${p.totalBags * p.L}</span>`;
+
+            let lcmStep = p.isPackedFixed
+              ? `Subtract constant ${p.int2} to isolate fractional expression.`
+              : `Find LCM of denominators: LCM(${p.int1}, ${p.int2}) = <b>${p.L}</b>.`;
+
             workingHtml = `
               <div class="feedback-heading">Incorrect / Partial Correct.</div>
               <div><b>Correct Part 1:</b> (i) <span class="math-text">${p.ans1_1}</span>, (ii) <span class="math-text">${p.ans1_2}</span></div>
@@ -1108,15 +861,13 @@
               <ol class="working-steps">
                 <li><b>Form expressions for number of bags:</b><br>
                     Number of ${p.f1} bags = <span class="math-text">(${p.expr1} - ${p.left1}) / ${p.int1} = ${p.ans1_1}</span><br>
-                    Number of ${p.f2} bags = <span class="math-text">(${p.expr2} - ${p.left2}) / ${p.int2} = ${p.ans1_2}</span>
+                    ${part2BagStep}
                 </li>
                 <li><b>Form total bags equation:</b><br>
-                    <span class="math-text">${p.ans1_1} + ${p.ans1_2} = ${p.totalBags}</span>
+                    ${equationFormStep}
                 </li>
-                <li><b>Find LCM of denominators:</b> LCM(${p.int1}, ${p.int2}) = <b>${p.L}</b>.</li>
-                <li><b>Clear fractions:</b> Multiply whole equation by ${p.L}:<br>
-                    <span class="math-text">${p.m1}(${cleanExpr(p.t1_a, p.eq_n1_b)}) + ${p.m2}(${cleanExpr(p.t2_a, p.eq_n2_b)}) = ${p.totalBags * p.L}</span>
-                </li>
+                <li><b>Simplify / Find LCM:</b> ${lcmStep}</li>
+                <li><b>Clear fractions:</b> ${clearFractionStep}</li>
                 <li><b>Expand and solve for x:</b><br>
                     <span class="math-text">${p.final_a}x = ${p.final_a * p.targetX}</span> &rArr; <span class="math-text">x = ${p.targetX}</span>
                 </li>
@@ -1128,10 +879,11 @@
               </ol>
             `;
           } else if (p.type === 'speed') {
+            let displayAns2 = p.ans2 === p.ans2_3sf ? `${p.ans2} km` : `${p.ans2} km (or ${p.ans2_3sf} km to 3 s.f.)`;
             workingHtml = `
               <div class="feedback-heading">Incorrect / Partial Correct.</div>
               <div><b>Correct Part 1:</b> (i) <span class="math-text">${p.ans1_1}</span> hours, (ii) <span class="math-text">${p.ans1_2}</span> hours</div>
-              <div><b>Correct Part 2:</b> Distance AB = <span class="math-text">${p.ans2} km</span></div>
+              <div><b>Correct Part 2:</b> Distance AB = <span class="math-text">${displayAns2}</span></div>
               <br>
               <b>Step-by-step Working:</b>
               <ol class="working-steps">
@@ -1146,11 +898,11 @@
                     <span class="math-text">${p.m1}x + ${p.m2}(${p.exprBC}) = ${(p.totalMinutes/60)*p.L}</span>
                 </li>
                 <li><b>Expand and solve for x:</b><br>
-                    <span class="math-text">${p.final_a}x = ${p.final_a * p.targetX}</span> &rArr; <span class="math-text">x = ${p.targetX} km</span>
+                    <span class="math-text">${p.final_a}x = ${p.final_a * p.targetX}</span> &rArr; <span class="math-text">x = ${p.ans2_3sf} km (to 3 s.f.)</span>
                 </li>
               </ol>
             `;
-          } else {
+          } else { // percentage
             workingHtml = `
               <div class="feedback-heading">Incorrect / Partial Correct.</div>
               <div><b>Correct Part 1:</b> (i) <span class="math-text">${p.ans1_1}</span>, (ii) <span class="math-text">${p.ans1_2}</span></div>
@@ -1183,15 +935,8 @@
 
     // Save PDF Handler
     savePdfBtn.addEventListener('click', () => {
-      stopDrawing();
-      syncPrintImage();
       window.print();
     });
-
-    window.onbeforeprint = () => {
-      stopDrawing();
-      syncPrintImage();
-    };
   </script>
 </body>
 </html>
