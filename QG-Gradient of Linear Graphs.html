@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gradient of Linear Graphs</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #0284c7;
+      --secondary-hover: #0369a1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --error: #dc2626;
+      --disabled: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 1100px;
+      padding: 30px;
+      position: relative;
+    }
+
+    .user-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .user-header label {
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .user-header input {
+      max-width: 250px;
+      padding: 6px 12px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-top: 0;
+      margin-bottom: 25px;
+    }
+
+    .difficulty-section {
+      margin-bottom: 25px;
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .difficulty-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .difficulty-labels span {
+      flex: 1;
+      text-align: center;
+      color: var(--disabled);
+      cursor: pointer;
+    }
+
+    .difficulty-labels span.active {
+      color: var(--primary);
+    }
+
+    .slider {
+      width: 100%;
+      appearance: none;
+      height: 8px;
+      border-radius: 5px;
+      background: #cbd5e1;
+      outline: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+
+    .workspace-layout {
+      display: flex;
+      gap: 25px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+
+    .left-column {
+      flex: 1.2;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right-column {
+      flex: 0.8;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 850px) {
+      .workspace-layout {
+        flex-direction: column;
+      }
+    }
+
+    button {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-bottom: 20px;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button:disabled {
+      background-color: var(--disabled) !important;
+      cursor: not-allowed !important;
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      margin-top: 15px;
+      margin-bottom: 0;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--secondary-hover);
+    }
+
+    .question-box {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .question-prompt {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+
+    .equation-display {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .graph-container {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      aspect-ratio: 1 / 1;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: visible;
+    }
+
+    .draw-section {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .draw-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .draw-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    .draw-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .draw-btn {
+      width: auto;
+      padding: 4px 10px;
+      margin-bottom: 0;
+      font-size: 0.8rem;
+      background-color: #e2e8f0;
+      color: var(--text);
+    }
+
+    .draw-btn:hover {
+      background-color: #cbd5e1;
+    }
+
+    .canvas-container {
+      width: 100%;
+      flex: 1;
+      min-height: 320px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: #ffffff;
+      touch-action: none;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 8px;
+      cursor: crosshair;
+    }
+
+    canvas.disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .print-draw-image {
+      display: none;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .part-block {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 12px 15px;
+      border-radius: 8px;
+    }
+
+    .part-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      color: var(--primary);
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .input-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .input-label {
+      font-size: 0.95rem;
+      font-weight: bold;
+      white-space: nowrap;
+      min-width: 40px;
+    }
+
+    select, input[type="text"] {
+      padding: 8px 12px;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+    }
+
+    select {
+      background-color: white;
+      cursor: pointer;
+    }
+
+    input[type="text"] {
+      flex: 1;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--primary);
+    }
+
+    input[type="text"]:disabled, select:disabled {
+      background-color: #f1f5f9;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .feedback {
+      border-radius: 8px;
+      padding: 15px;
+      display: none;
+    }
+
+    .feedback.correct {
+      display: block;
+      background-color: #dcfce7;
+      border: 1px solid #bbf7d0;
+      color: #15803d;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .feedback.incorrect {
+      display: block;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .feedback-heading {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--error);
+    }
+
+    .solution-line-block {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .solution-line-title {
+      font-weight: bold;
+      font-size: 1.05rem;
+      margin-bottom: 10px;
+    }
+
+    .math-working {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--primary);
+      margin-top: 10px;
+    }
+
+    .student-answer-summary {
+      display: none;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff;
+        padding: 0;
+      }
+
+      .container {
+        box-shadow: none;
+        border: none;
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .workspace-layout {
+        display: block;
+      }
+
+      .user-header,
+      .difficulty-section,
+      #generateBtn,
+      #submitBtn,
+      #savePdfBtn,
+      .input-section,
+      .draw-controls {
+        display: none !important;
+      }
+
+      .student-answer-summary {
+        display: block !important;
+      }
+
+      .question-box {
+        border: 1px solid #cbd5e1;
+      }
+
+      .canvas-container {
+        display: none !important;
+      }
+
+      .print-draw-image {
+        display: block !important;
+        margin-top: 15px;
+        margin-bottom: 15px;
+      }
+
+      .feedback {
+        display: block !important;
+        border: 1px solid #cbd5e1;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+      }
+
+      .feedback-heading {
+        color: var(--error);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="user-header">
+      <label for="userNameInput">Name:</label>
+      <input type="text" id="userNameInput" placeholder="Enter your initials" />
+    </div>
+
+    <h1>Gradient of Linear Graphs</h1>
+
+    <div class="difficulty-section">
+      <div class="difficulty-labels">
+        <span id="labelBasic" class="active">Basic</span>
+        <span id="labelInter" class="disabled" style="display:none;">Intermediate</span>
+        <span id="labelAdvance" class="disabled">Advance</span>
+      </div>
+      <input type="range" min="1" max="1" value="1" class="slider" id="difficultySlider" disabled>
+    </div>
+
+    <button id="generateBtn">Generate Question</button>
+
+    <div class="workspace-layout">
+      <div class="left-column">
+        <div class="question-box">
+          <div class="question-prompt" id="questionPrompt">Click "Generate Question" to begin.</div>
+          <div class="equation-display" id="equationDisplay"></div>
+        </div>
+
+        <div class="input-section" id="inputSection" style="display: none;">
+          <div class="part-block">
+            <div class="part-title">(a) Sign of Gradient</div>
+            <div class="input-row">
+              <span class="input-label">L₁:</span>
+              <select id="signL1">
+                <option value="">Select</option>
+                <option value="+">+</option>
+                <option value="-">-</option>
+              </select>
+            </div>
+            <div class="input-row">
+              <span class="input-label">L₂:</span>
+              <select id="signL2">
+                <option value="">Select</option>
+                <option value="+">+</option>
+                <option value="-">-</option>
+              </select>
+            </div>
+            <div class="input-row">
+              <span class="input-label">L₃:</span>
+              <select id="signL3">
+                <option value="">Select</option>
+                <option value="+">+</option>
+                <option value="-">-</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="part-block">
+            <div class="part-title">(b) Gradient Values</div>
+            <div class="input-row">
+              <span class="input-label">L₁:</span>
+              <input type="text" id="gradL1" placeholder="e.g. 1/2, -3/2, 2, -1" />
+            </div>
+            <div class="input-row">
+              <span class="input-label">L₂:</span>
+              <input type="text" id="gradL2" placeholder="e.g. 1/2, -3/2, 2, -1" />
+            </div>
+            <div class="input-row">
+              <span class="input-label">L₃:</span>
+              <input type="text" id="gradL3" placeholder="e.g. 1/2, -3/2, 2, -1" />
+            </div>
+          </div>
+
+          <button id="submitBtn" style="margin-top: 10px; margin-bottom: 0;">Submit</button>
+        </div>
+      </div>
+
+      <div class="right-column">
+        <div class="draw-section" id="drawSection" style="display: none;">
+          <div class="draw-header">
+            <span class="draw-title">Working Space (Draw / Scratchpad):</span>
+            <div class="draw-controls">
+              <button type="button" class="draw-btn" id="undoDrawBtn">Undo</button>
+              <button type="button" class="draw-btn" id="clearDrawBtn">Clear</button>
+            </div>
+          </div>
+          <div class="canvas-container">
+            <canvas id="workingCanvas"></canvas>
+          </div>
+          <img id="printDrawImage" class="print-draw-image" alt="Student Working Drawing" />
+        </div>
+      </div>
+    </div>
+
+    <div class="student-answer-summary" id="studentAnswerSummary"></div>
+    <div class="feedback" id="feedbackBox"></div>
+    <button id="savePdfBtn" class="btn-secondary" style="display: none;">Save PDF</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+    import { getFirestore, collection, addDoc, doc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAd0olTVny--vwE9UVzh5YRDE7lzha6y08",
+      authDomain: "qg-summary.firebaseapp.com",
+      projectId: "qg-summary",
+      storageBucket: "qg-summary.firebasestorage.app",
+      messagingSenderId: "660515596494",
+      appId: "1:660515596494:web:11d5aacc8c3937f452089f",
+      measurementId: "G-5T9WWML4EK"
+    };
+
+    let db;
+    try {
+      const app = initializeApp(firebaseConfig);
+      getAnalytics(app);
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn("Firebase initialization warning:", e);
+    }
+
+    window.recordCorrectSubmission = async function() {
+      if (!db) return;
+      const userNameInput = document.getElementById('userNameInput');
+      const name = userNameInput.value.trim() || 'Anonymous';
+
+      try {
+        await addDoc(collection(db, "submissions"), {
+          name: name,
+          timestamp: serverTimestamp(),
+          Chapter: 'Chap2.3'
+        });
+
+        const counterRef = doc(db, "counter", name);
+        await setDoc(counterRef, {
+          name: name,
+          Chap2_3: increment(1),
+          countTotal: increment(1)
+        }, { merge: true });
+
+      } catch (err) {
+        console.error("Firebase write error:", err);
+      }
+    };
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let currentProblem = null;
+      let isSubmitted = false;
+      const LINE_COLORS = ['#dc2626', '#2563eb', '#16a34a'];
+
+      const generateBtn = document.getElementById('generateBtn');
+      const questionPrompt = document.getElementById('questionPrompt');
+      const equationDisplay = document.getElementById('equationDisplay');
+      const inputSection = document.getElementById('inputSection');
+      
+      const signL1 = document.getElementById('signL1');
+      const signL2 = document.getElementById('signL2');
+      const signL3 = document.getElementById('signL3');
+
+      const gradL1 = document.getElementById('gradL1');
+      const gradL2 = document.getElementById('gradL2');
+      const gradL3 = document.getElementById('gradL3');
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const feedbackBox = document.getElementById('feedbackBox');
+      const savePdfBtn = document.getElementById('savePdfBtn');
+      const studentAnswerSummary = document.getElementById('studentAnswerSummary');
+
+      const drawSection = document.getElementById('drawSection');
+      const canvas = document.getElementById('workingCanvas');
+      const ctx = canvas.getContext('2d');
+      const clearDrawBtn = document.getElementById('clearDrawBtn');
+      const undoDrawBtn = document.getElementById('undoDrawBtn');
+      const printDrawImage = document.getElementById('printDrawImage');
+
+      let isDrawing = false;
+      let strokeHistory = [];
+      let currentStroke = [];
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          redrawCanvas();
+        }
+      }
+
+      function getCanvasCoordinates(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      function startDrawing(e) {
+        if (isSubmitted) return;
+        isDrawing = true;
+        const pos = getCanvasCoordinates(e);
+        currentStroke = [{ x: pos.x, y: pos.y }];
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      }
+
+      function draw(e) {
+        if (!isDrawing || isSubmitted) return;
+        e.preventDefault();
+        const pos = getCanvasCoordinates(e);
+        currentStroke.push({ x: pos.x, y: pos.y });
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#0f172a';
+
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+
+      function stopDrawing() {
+        if (!isDrawing) return;
+        isDrawing = false;
+        if (currentStroke.length > 0) {
+          strokeHistory.push([...currentStroke]);
+          currentStroke = [];
+        }
+      }
+
+      function redrawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#0f172a';
+
+        strokeHistory.forEach(stroke => {
+          if (stroke.length < 2) return;
+          ctx.beginPath();
+          ctx.moveTo(stroke[0].x, stroke[0].y);
+          for (let i = 1; i < stroke.length; i++) {
+            ctx.lineTo(stroke[i].x, stroke[i].y);
+          }
+          ctx.stroke();
+        });
+      }
+
+      function clearCanvas() {
+        if (isSubmitted) return;
+        strokeHistory = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function undoCanvas() {
+        if (isSubmitted) return;
+        strokeHistory.pop();
+        redrawCanvas();
+      }
+
+      function syncPrintImage() {
+        printDrawImage.src = canvas.toDataURL('image/png');
+      }
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseleave', stopDrawing);
+
+      canvas.addEventListener('touchstart', startDrawing, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', stopDrawing);
+
+      clearDrawBtn.addEventListener('click', clearCanvas);
+      undoDrawBtn.addEventListener('click', undoCanvas);
+      window.addEventListener('resize', resizeCanvas);
+
+      function gcd(a, b) {
+        a = Math.abs(a);
+        b = Math.abs(b);
+        while (b) {
+          let t = b;
+          b = a % b;
+          a = t;
+        }
+        return a;
+      }
+
+      function simplifyFraction(num, den) {
+        if (den < 0) {
+          num = -num;
+          den = -den;
+        }
+        const g = gcd(num, den);
+        num /= g;
+        den /= g;
+        if (den === 1) return `${num}`;
+        return `${num}/${den}`;
+      }
+
+      function parseUserFraction(str) {
+        if (!str) return null;
+        str = str.trim().replace(/\s+/g, '');
+        if (str.includes('/')) {
+          const parts = str.split('/');
+          if (parts.length !== 2) return null;
+          const n = parseInt(parts[0], 10);
+          const d = parseInt(parts[1], 10);
+          if (isNaN(n) || isNaN(d) || d === 0) return null;
+          return simplifyFraction(n, d);
+        } else {
+          const n = parseFloat(str);
+          if (isNaN(n)) return null;
+          if (Number.isInteger(n)) return `${n}`;
+          const den = 100;
+          const num = Math.round(n * 100);
+          return simplifyFraction(num, den);
+        }
+      }
+
+      function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      // Helper to wrap negative numbers in parentheses for substitution steps
+      function formatVal(val) {
+        return val < 0 ? `(${val})` : `${val}`;
+      }
+
+      function renderSVGGrid(linesToDraw = [], highlightTriangleForIndex = -1) {
+        const viewBoxSize = 400;
+        const margin = 40;
+        const gridArea = viewBoxSize - 2 * margin;
+        
+        const xMin = -2, xMax = 4;
+        const yMin = -2, yMax = 4;
+        
+        function mapX(x) {
+          return margin + ((x - xMin) / (xMax - xMin)) * gridArea;
+        }
+        function mapY(y) {
+          return viewBoxSize - margin - ((y - yMin) / (yMax - yMin)) * gridArea;
+        }
+
+        let svgHtml = `<svg viewBox="0 0 ${viewBoxSize} ${viewBoxSize}">`;
+        
+        for (let i = -10; i <= 20; i++) {
+          let val = i * 0.2;
+          if (val < -2.001 || val > 4.001) continue;
+          let isMajor = Math.abs(val - Math.round(val)) < 0.001;
+
+          let vx = mapX(val);
+          svgHtml += `<line x1="${vx}" y1="${mapY(-2)}" x2="${vx}" y2="${mapY(4)}" stroke="${isMajor ? '#cbd5e1' : '#f1f5f9'}" stroke-width="${isMajor ? '1' : '0.5'}" />`;
+
+          let vy = mapY(val);
+          svgHtml += `<line x1="${mapX(-2)}" y1="${vy}" x2="${mapX(4)}" y2="${vy}" stroke="${isMajor ? '#cbd5e1' : '#f1f5f9'}" stroke-width="${isMajor ? '1' : '0.5'}" />`;
+        }
+
+        let x0 = mapX(0);
+        let y0 = mapY(0);
+        svgHtml += `<line x1="${mapX(-2)}" y1="${y0}" x2="${mapX(4)}" y2="${y0}" stroke="#334155" stroke-width="2" />`;
+        svgHtml += `<line x1="${x0}" y1="${mapY(-2)}" x2="${x0}" y2="${mapY(4)}" stroke="#334155" stroke-width="2" />`;
+        
+        svgHtml += `<polygon points="${mapX(4)},${y0} ${mapX(4)-6},${y0-4} ${mapX(4)-6},${y0+4}" fill="#334155" />`;
+        svgHtml += `<polygon points="${x0},${mapY(4)} ${x0-4},${mapY(4)+6} ${x0+4},${mapY(4)+6}" fill="#334155" />`;
+        
+        svgHtml += `<text x="${mapX(4)+12}" y="${y0+4}" font-size="14" font-weight="bold" fill="#334155">x</text>`;
+        svgHtml += `<text x="${x0-4}" y="${mapY(4)-10}" font-size="14" font-weight="bold" fill="#334155">y</text>`;
+
+        for (let i = -2; i <= 4; i++) {
+          if (i !== 0) {
+            svgHtml += `<text x="${mapX(i)}" y="${y0 + 16}" font-size="11" fill="#475569" text-anchor="middle">${i}</text>`;
+            svgHtml += `<text x="${x0 - 8}" y="${mapY(i) + 4}" font-size="11" fill="#475569" text-anchor="end">${i}</text>`;
+          }
+        }
+        svgHtml += `<text x="${x0 - 8}" y="${y0 + 14}" font-size="11" fill="#475569">0</text>`;
+
+        linesToDraw.forEach((line, idx) => {
+          let isFocus = (highlightTriangleForIndex === -1 || highlightTriangleForIndex === idx);
+          let opacity = isFocus ? "1" : "0.15";
+          let color = LINE_COLORS[idx];
+          
+          let px1 = mapX(line.p1.x), py1 = mapY(line.p1.y);
+          let px2 = mapX(line.p2.x), py2 = mapY(line.p2.y);
+          
+          svgHtml += `<line x1="${px1}" y1="${py1}" x2="${px2}" y2="${py2}" stroke="${color}" stroke-width="2.5" stroke-opacity="${opacity}" stroke-linecap="round" />`;
+
+          let labelPos = line.labelPos;
+          let lx = mapX(labelPos.x), ly = mapY(labelPos.y);
+          svgHtml += `<text x="${lx}" y="${ly}" fill="${color}" font-weight="bold" font-size="14" opacity="${opacity}">L<tspan dy="3" font-size="10">${idx+1}</tspan></text>`;
+
+          if (highlightTriangleForIndex === idx) {
+            let A = line.pointA;
+            let B = line.pointB;
+            
+            let pA = A.x < B.x ? A : B;
+            let pB = A.x < B.x ? B : A;
+            let pC = { x: pB.x, y: pA.y };
+
+            let ax = mapX(pA.x), ay = mapY(pA.y);
+            let bx = mapX(pB.x), by = mapY(pB.y);
+            let cx = mapX(pC.x), cy = mapY(pC.y);
+
+            svgHtml += `<polygon points="${ax},${ay} ${cx},${cy} ${bx},${by}" fill="none" stroke="#0f172a" stroke-width="2" stroke-dasharray="4,4" />`;
+
+            svgHtml += `<text x="${ax}" y="${ay+5}" font-size="16" font-weight="bold" fill="#000" text-anchor="middle">X</text>`;
+            svgHtml += `<text x="${bx}" y="${by+5}" font-size="16" font-weight="bold" fill="#000" text-anchor="middle">X</text>`;
+
+            svgHtml += `<text x="${ax - 10}" y="${ay - 10}" font-size="12" font-weight="bold" fill="#000">(${pA.x}, ${pA.y})</text>`;
+            svgHtml += `<text x="${bx + 10}" y="${by - 10}" font-size="12" font-weight="bold" fill="#000">(${pB.x}, ${pB.y})</text>`;
+
+            let dx = pB.x - pA.x;
+            let dy = pB.y - pA.y;
+            
+            let absDx = Math.abs(dx);
+            let midHx = (ax + cx) / 2;
+            let midHy = cy + (pA.y < pB.y ? 18 : -10);
+            svgHtml += `<text x="${midHx}" y="${midHy}" font-size="11" font-weight="bold" fill="#0369a1" text-anchor="middle">${absDx} unit${absDx > 1 ? 's' : ''}</text>`;
+
+            let midVx = cx + 12;
+            let midVy = (cy + by) / 2 + 4;
+            let absDy = Math.abs(dy);
+            svgHtml += `<text x="${midVx}" y="${midVy}" font-size="11" font-weight="bold" fill="#0369a1">${dy} unit${absDy > 1 ? 's' : ''}</text>`;
+          }
+        });
+
+        svgHtml += `</svg>`;
+        return svgHtml;
+      }
+
+      function generateQuestionData() {
+        let lines = [];
+        let gradients = [];
+
+        function getLine() {
+          let pA = { x: getRandomInt(-2, 4), y: getRandomInt(-2, 4) };
+          let pB = { x: getRandomInt(-2, 4), y: getRandomInt(-2, 4) };
+
+          if (pA.x === pB.x || pA.y === pB.y) return null;
+          if (Math.abs(pB.x - pA.x) + Math.abs(pB.y - pA.y) < 3) return null;
+
+          let dx = pB.x - pA.x;
+          let dy = pB.y - pA.y;
+          
+          let gradStr = simplifyFraction(dy, dx);
+          if (gradients.includes(gradStr)) return null;
+
+          let m = dy / dx;
+          let c = pA.y - m * pA.x;
+
+          let pts = [];
+          
+          let y_at_xMin = m * (-2) + c;
+          if (y_at_xMin >= -2 && y_at_xMin <= 4) pts.push({ x: -2, y: y_at_xMin });
+          
+          let y_at_xMax = m * 4 + c;
+          if (y_at_xMax >= -2 && y_at_xMax <= 4) pts.push({ x: 4, y: y_at_xMax });
+
+          let x_at_yMin = (-2 - c) / m;
+          if (x_at_yMin >= -2 && x_at_yMin <= 4) pts.push({ x: x_at_yMin, y: -2 });
+
+          let x_at_yMax = (4 - c) / m;
+          if (x_at_yMax >= -2 && x_at_yMax <= 4) pts.push({ x: x_at_yMax, y: 4 });
+
+          let uniquePts = [];
+          pts.forEach(pt => {
+            if (!uniquePts.some(u => Math.abs(u.x - pt.x) < 0.001 && Math.abs(u.y - pt.y) < 0.001)) {
+              uniquePts.push(pt);
+            }
+          });
+
+          if (uniquePts.length < 2) return null;
+
+          uniquePts.sort((a, b) => a.x - b.x);
+
+          let labelPt = {
+            x: uniquePts[0].x + 0.5,
+            y: m * (uniquePts[0].x + 0.5) + c + (m > 0 ? 0.3 : -0.3)
+          };
+          labelPt.x = Math.max(-1.5, Math.min(3.5, labelPt.x));
+          labelPt.y = Math.max(-1.5, Math.min(3.5, labelPt.y));
+
+          return {
+            p1: uniquePts[0],
+            p2: uniquePts[1],
+            pointA: pA,
+            pointB: pB,
+            dx, dy,
+            gradStr,
+            gradVal: dy / dx,
+            sign: dy / dx > 0 ? '+' : '-',
+            labelPos: labelPt
+          };
+        }
+
+        while (lines.length < 3) {
+          let newLine = getLine();
+          if (newLine) {
+            if (lines.length === 2) {
+              let currentHasPos = lines.some(l => l.sign === '+') || newLine.sign === '+';
+              let currentHasNeg = lines.some(l => l.sign === '-') || newLine.sign === '-';
+              if (!currentHasPos || !currentHasNeg) continue;
+            }
+            lines.push(newLine);
+            gradients.push(newLine.gradStr);
+          }
+        }
+
+        return lines;
+      }
+
+      generateBtn.addEventListener('click', () => {
+        isSubmitted = false;
+        feedbackBox.style.display = 'none';
+        feedbackBox.className = 'feedback';
+        studentAnswerSummary.style.display = 'none';
+        
+        signL1.disabled = false; signL2.disabled = false; signL3.disabled = false;
+        gradL1.disabled = false; gradL2.disabled = false; gradL3.disabled = false;
+        signL1.value = ""; signL2.value = ""; signL3.value = "";
+        gradL1.value = ""; gradL2.value = ""; gradL3.value = "";
+
+        submitBtn.disabled = false;
+        undoDrawBtn.disabled = false;
+        clearDrawBtn.disabled = false;
+        canvas.classList.remove('disabled');
+
+        clearCanvas();
+
+        currentProblem = generateQuestionData();
+
+        questionPrompt.textContent = "In the following diagram,";
+        
+        let htmlContent = `
+          <div style="margin-bottom: 15px;">
+            <div><b>(a)</b> label '<b>+</b>' for the line(s) with positive gradient and '<b>-</b>' for the line(s) with negative gradient,</div>
+            <div><b>(b)</b> find the gradients of the lines <b>L₁</b>, <b>L₂</b> and <b>L₃</b>.</div>
+          </div>
+          <div class="graph-container">
+            ${renderSVGGrid(currentProblem)}
+          </div>
+        `;
+        equationDisplay.innerHTML = htmlContent;
+
+        drawSection.style.display = 'flex';
+        inputSection.style.display = 'flex';
+        savePdfBtn.style.display = 'block';
+
+        setTimeout(resizeCanvas, 50);
+      });
+
+      submitBtn.addEventListener('click', checkAnswer);
+
+      function checkAnswer() {
+        if (!currentProblem || isSubmitted) return;
+
+        stopDrawing();
+
+        isSubmitted = true;
+        signL1.disabled = true; signL2.disabled = true; signL3.disabled = true;
+        gradL1.disabled = true; gradL2.disabled = true; gradL3.disabled = true;
+        submitBtn.disabled = true;
+        undoDrawBtn.disabled = true;
+        clearDrawBtn.disabled = true;
+        canvas.classList.add('disabled');
+
+        syncPrintImage();
+
+        const userSigns = [signL1.value, signL2.value, signL3.value];
+        const userGradsRaw = [gradL1.value, gradL2.value, gradL3.value];
+        const userGradsParsed = userGradsRaw.map(parseUserFraction);
+
+        const correctSigns = currentProblem.map(l => l.sign);
+        const correctGrads = currentProblem.map(l => l.gradStr);
+
+        let isSignsCorrect = userSigns.every((val, idx) => val === correctSigns[idx]);
+        let isGradsCorrect = userGradsParsed.every((val, idx) => val === correctGrads[idx]);
+
+        studentAnswerSummary.innerHTML = `
+          Student Answers:<br>
+          (a) L₁: ${userSigns[0]||'-'}, L₂: ${userSigns[1]||'-'}, L₃: ${userSigns[2]||'-'}<br>
+          (b) L₁: ${userGradsRaw[0]||'-'}, L₂: ${userGradsRaw[1]||'-'}, L₃: ${userGradsRaw[2]||'-'}
+        `;
+
+        feedbackBox.style.display = 'block';
+
+        if (isSignsCorrect && isGradsCorrect) {
+          feedbackBox.className = 'feedback correct';
+          feedbackBox.innerHTML = '&#10004; Correct! Great job!';
+          if (typeof window.recordCorrectSubmission === 'function') {
+            window.recordCorrectSubmission();
+          }
+        } else {
+          feedbackBox.className = 'feedback incorrect';
+          
+          let solutionHtml = `<div class="feedback-heading">Incorrect. Here is the worked solution:</div>`;
+
+          currentProblem.forEach((line, idx) => {
+            let lineName = `L<sub>${idx+1}</sub>`;
+            let A = line.pointA.x < line.pointB.x ? line.pointA : line.pointB;
+            let B = line.pointA.x < line.pointB.x ? line.pointB : line.pointA;
+
+            let vertChange = B.y - A.y;
+            let horizChange = B.x - A.x;
+
+            let horizAbs = Math.abs(horizChange);
+            let vertAbs = Math.abs(vertChange);
+
+            let gradSteps = `Gradient of ${lineName}\n`;
+            gradSteps += `= Vertical change / Horizontal change\n`;
+            gradSteps += `= [${formatVal(B.y)} - ${formatVal(A.y)}] / [${formatVal(B.x)} - ${formatVal(A.x)}]\n`;
+            gradSteps += `= ${vertChange} / ${horizChange}\n`;
+            gradSteps += `= ${line.gradStr}`;
+
+            if (line.gradStr.includes('/')) {
+              gradSteps += ` = ${(line.dy / line.dx).toFixed(2).replace(/\.00$/, '')}`;
+            }
+
+            solutionHtml += `
+              <div class="solution-line-block">
+                <div class="solution-line-title" style="color: ${LINE_COLORS[idx]};">Worked Solution for Line ${lineName}</div>
+                <div class="graph-container">
+                  ${renderSVGGrid(currentProblem, idx)}
+                </div>
+                <div class="math-working">
+                  <b>Step 1 & 2: Selected Points & Changes</b><br>
+                  Point A = (${A.x}, ${A.y})<br>
+                  Point B = (${B.x}, ${B.y})<br>
+                  Horizontal change = ${horizAbs} unit${horizAbs > 1 ? 's' : ''}<br>
+                  Vertical change = ${vertChange} unit${vertAbs > 1 ? 's' : ''}<br><br>
+                  <b>Step 3: Algebraic Working</b><br>
+                  ${gradSteps.replace(/\n/g, '<br>')}
+                </div>
+              </div>
+            `;
+          });
+
+          feedbackBox.innerHTML = solutionHtml;
+        }
+      }
+
+      savePdfBtn.addEventListener('click', () => {
+        stopDrawing();
+        syncPrintImage();
+        window.print();
+      });
+
+      window.onbeforeprint = () => {
+        stopDrawing();
+        syncPrintImage();
+      };
+    });
+  </script>
+</body>
+</html>
