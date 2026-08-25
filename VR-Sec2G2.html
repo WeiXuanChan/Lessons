@@ -100,6 +100,28 @@
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
+    // List of bad words to filter out
+    async function fetchBadWords() {
+      try {
+        const response = await fetch("https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/en");
+        const text = await response.text();
+        // Split by line into an array
+        return text.split('\n').map(word => word.trim()).filter(Boolean);
+      } catch (err) {
+        console.error("Failed to load:", err);
+        return [];
+      }
+    }
+
+// Usage inside your async function:
+const BAD_WORDS = await fetchBadWords();
+
+    function hasProfanity(text) {
+      if (!text) return false;
+      const lowerText = text.toLowerCase();
+      return BAD_WORDS.some(word => lowerText.includes(word));
+    }
+
     // Color palette generator for distinct datasets/fields
     const colorPalette = [
       '#4f46e5', '#0284c7', '#16a34a', '#d97706', 
@@ -118,34 +140,43 @@
           return;
         }
 
-        const documentIds = [];
         const numericFields = new Set();
-        const documentDataMap = [];
+        const mergedData = {};
 
+        // 1. Process documents & aggregate offensive IDs into "Anonymous"
         querySnapshot.forEach((docSnap) => {
-          const docId = docSnap.id;
+          let docId = docSnap.id;
           const data = docSnap.data();
-          documentIds.push(docId);
-          documentDataMap.push({ id: docId, ...data });
 
-          // Discover all valid numeric fields (int64) excluding "countTotal"
+          // Check if document ID contains profanity
+          if (hasProfanity(docId)) {
+            docId = "Anonymous";
+          }
+
+          if (!mergedData[docId]) {
+            mergedData[docId] = {};
+          }
+
+          // Accumulate valid int64 fields (excluding "countTotal")
           Object.keys(data).forEach((field) => {
             if (field !== "countTotal" && Number.isInteger(data[field])) {
               numericFields.add(field);
+              mergedData[docId][field] = (mergedData[docId][field] || 0) + data[field];
             }
           });
         });
 
+        const documentIds = Object.keys(mergedData);
         const fieldList = Array.from(numericFields);
 
-        if (fieldList.length === 0) {
+        if (fieldList.length === 0 || documentIds.length === 0) {
           statusEl.textContent = "No valid integer fields found to plot.";
           return;
         }
 
-        // Construct Chart.js datasets dynamically per integer field
+        // 2. Construct Chart.js datasets dynamically per integer field
         const datasets = fieldList.map((field, index) => {
-          const values = documentDataMap.map(doc => doc[field] || 0);
+          const values = documentIds.map(id => mergedData[id][field] || 0);
           return {
             label: field,
             data: values,
@@ -158,7 +189,7 @@
         statusEl.style.display = 'none';
         chartWrapper.style.display = 'block';
 
-        // Render Stacked Bar Chart
+        // 3. Render Stacked Bar Chart
         const ctx = document.getElementById('counterChart').getContext('2d');
         new Chart(ctx, {
           type: 'bar',
