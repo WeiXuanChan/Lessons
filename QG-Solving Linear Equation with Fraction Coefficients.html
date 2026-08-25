@@ -42,6 +42,25 @@
       width: 100%;
       max-width: 1100px;
       padding: 30px;
+      position: relative;
+    }
+
+    /* Top Left User Name Section */
+    .user-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .user-header label {
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .user-header input {
+      max-width: 250px;
+      padding: 6px 12px;
     }
 
     h1 {
@@ -370,6 +389,7 @@
         display: block;
       }
 
+      .user-header,
       .difficulty-section,
       #generateBtn,
       #submitBtn,
@@ -413,6 +433,12 @@
 <body>
 
   <div class="container">
+    <!-- User Input Space in Top Left Corner -->
+    <div class="user-header">
+      <label for="userNameInput">Name:</label>
+      <input type="text" id="userNameInput" placeholder="Enter your name" />
+    </div>
+
     <h1>Linear Equations Practice</h1>
 
     <!-- 1. Difficulty Slider -->
@@ -483,6 +509,54 @@
     <!-- 6. Save PDF Button -->
     <button id="savePdfBtn" class="btn-secondary" style="display: none;">Save PDF</button>
   </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+    import { getFirestore, collection, addDoc, doc, setDoc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAd0olTVny--vwE9UVzh5YRDE7lzha6y08",
+      authDomain: "qg-summary.firebaseapp.com",
+      projectId: "qg-summary",
+      storageBucket: "qg-summary.firebasestorage.app",
+      messagingSenderId: "660515596494",
+      appId: "1:660515596494:web:11d5aacc8c3937f452089f",
+      measurementId: "G-5T9WWML4EK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    async function recordCorrectSubmission() {
+      const userNameInput = document.getElementById('userNameInput');
+      const name = userNameInput.value.trim() || 'Anonymous';
+
+      try {
+        // 1. Add document to "submissions" collection
+        await addDoc(collection(db, "submissions"), {
+          name: name,
+          timestamp: serverTimestamp(),
+          Chapter: 'Chap1.2'
+        });
+
+        // 2. Update/create counter document for the user
+        const counterRef = doc(db, "counter", name);
+        await setDoc(counterRef, {
+          name: name,
+          Chap1_2: increment(1),
+          countTotal: increment(1)
+        }, { merge: true });
+
+      } catch (err) {
+        console.error("Firebase write error:", err);
+      }
+    }
+
+    // Expose handler globally for interaction with non-module scripts if needed
+    window.recordCorrectSubmission = recordCorrectSubmission;
+  </script>
 
   <script>
     // State Variables
@@ -809,8 +883,6 @@
         let isPackedFixed = Math.random() < 0.5;
         let pack2Opt = isPackedFixed ? `packed into ${int2} bags` : `bags of ${int2}`;
 
-        
-
         let targetX = getRandomInt(10, 30);
         let bags2 = isPackedFixed ? int2 : getRandomInt(3, 8);
 
@@ -1064,6 +1136,9 @@
         if (userAns === correctAns) {
           feedbackBox.className = 'feedback correct';
           feedbackBox.innerHTML = '&#10004; Correct!';
+          if (typeof window.recordCorrectSubmission === 'function') {
+            window.recordCorrectSubmission();
+          }
         } else {
           feedbackBox.className = 'feedback incorrect';
           const p = currentProblem;
@@ -1124,6 +1199,9 @@
         if (isCorrect1 && isCorrect2 && isCorrect3) {
           feedbackBox.className = 'feedback correct';
           feedbackBox.innerHTML = '&#10004; Correct!';
+          if (typeof window.recordCorrectSubmission === 'function') {
+            window.recordCorrectSubmission();
+          }
         } else {
           feedbackBox.className = 'feedback incorrect';
           let p = currentProblem;
