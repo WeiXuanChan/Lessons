@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counter Analytics Dashboard</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --primary: #4f46e5;
+      --text: #1e293b;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 1000px;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.95rem;
+      margin-bottom: 25px;
+    }
+
+    .chart-box {
+      position: relative;
+      width: 100%;
+      height: 500px;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-weight: bold;
+      color: #64748b;
+      padding: 40px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Question Correctly Answered</h1>
+    <div class="subtitle">Vertical Stacked Bar Graph by Student</div>
+    
+    <div id="status" class="status-msg">Loading Firebase data...</div>
+
+    <div class="chart-box" id="chartWrapper" style="display: none;">
+      <canvas id="counterChart"></canvas>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAd0olTVny--vwE9UVzh5YRDE7lzha6y08",
+      authDomain: "qg-summary.firebaseapp.com",
+      projectId: "qg-summary",
+      storageBucket: "qg-summary.firebasestorage.app",
+      messagingSenderId: "660515596494",
+      appId: "1:660515596494:web:11d5aacc8c3937f452089f",
+      measurementId: "G-5T9WWML4EK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    // Color palette generator for distinct datasets/fields
+    const colorPalette = [
+      '#4f46e5', '#0284c7', '#16a34a', '#d97706', 
+      '#dc2626', '#8b5cf6', '#ec4899', '#14b8a6'
+    ];
+
+    async function loadCounterData() {
+      const statusEl = document.getElementById('status');
+      const chartWrapper = document.getElementById('chartWrapper');
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "counter"));
+
+        if (querySnapshot.empty) {
+          statusEl.textContent = "No data found in the 'counter' collection.";
+          return;
+        }
+
+        const documentIds = [];
+        const numericFields = new Set();
+        const documentDataMap = [];
+
+        querySnapshot.forEach((docSnap) => {
+          const docId = docSnap.id;
+          const data = docSnap.data();
+          documentIds.push(docId);
+          documentDataMap.push({ id: docId, ...data });
+
+          // Discover all valid numeric fields (int64) excluding "countTotal"
+          Object.keys(data).forEach((field) => {
+            if (field !== "countTotal" && Number.isInteger(data[field])) {
+              numericFields.add(field);
+            }
+          });
+        });
+
+        const fieldList = Array.from(numericFields);
+
+        if (fieldList.length === 0) {
+          statusEl.textContent = "No valid integer fields found to plot.";
+          return;
+        }
+
+        // Construct Chart.js datasets dynamically per integer field
+        const datasets = fieldList.map((field, index) => {
+          const values = documentDataMap.map(doc => doc[field] || 0);
+          return {
+            label: field,
+            data: values,
+            backgroundColor: colorPalette[index % colorPalette.length],
+            borderRadius: 4
+          };
+        });
+
+        // Hide loading message and reveal chart space
+        statusEl.style.display = 'none';
+        chartWrapper.style.display = 'block';
+
+        // Render Stacked Bar Chart
+        const ctx = document.getElementById('counterChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: documentIds,
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top'
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false
+              }
+            },
+            scales: {
+              x: {
+                stacked: true,
+                title: {
+                  display: true,
+                  text: 'Student'
+                }
+              },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Question Answered Correctly'
+                },
+                ticks: {
+                  stepSize: 1
+                }
+              }
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error("Error fetching Firestore data:", error);
+        statusEl.textContent = "Error loading database contents: " + error.message;
+      }
+    }
+
+    loadCounterData();
+  </script>
+</body>
+</html>
