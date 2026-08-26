@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solving Simultaneous Linear Equations</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #0284c7;
+      --secondary-hover: #0369a1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --error: #dc2626;
+      --disabled: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 1100px;
+      padding: 30px;
+      position: relative;
+    }
+
+    .user-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .user-header label {
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .user-header input {
+      max-width: 250px;
+      padding: 6px 12px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-top: 0;
+      margin-bottom: 25px;
+    }
+
+    .difficulty-section {
+      margin-bottom: 25px;
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .difficulty-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .difficulty-labels span {
+      flex: 1;
+      text-align: center;
+      color: var(--disabled);
+    }
+
+    .difficulty-labels span.active {
+      color: var(--primary);
+    }
+
+    .slider {
+      width: 100%;
+      appearance: none;
+      height: 8px;
+      border-radius: 5px;
+      background: #cbd5e1;
+      outline: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+
+    .workspace-layout {
+      display: flex;
+      gap: 25px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+
+    .left-column {
+      flex: 1.2;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right-column {
+      flex: 0.8;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 850px) {
+      .workspace-layout {
+        flex-direction: column;
+      }
+    }
+
+    button {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-bottom: 20px;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button:disabled {
+      background-color: var(--disabled) !important;
+      cursor: not-allowed !important;
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      margin-top: 15px;
+      margin-bottom: 0;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--secondary-hover);
+    }
+
+    .question-box {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .question-prompt {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+
+    .equation-display {
+      font-size: 1.2rem;
+      font-weight: bold;
+      line-height: 1.8;
+      background: #f1f5f9;
+      padding: 12px 20px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .draw-section {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .draw-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .draw-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    .draw-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .draw-btn {
+      width: auto;
+      padding: 4px 10px;
+      margin-bottom: 0;
+      font-size: 0.8rem;
+      background-color: #e2e8f0;
+      color: var(--text);
+    }
+
+    .draw-btn:hover {
+      background-color: #cbd5e1;
+    }
+
+    .canvas-container {
+      width: 100%;
+      flex: 1;
+      min-height: 320px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: #ffffff;
+      touch-action: none;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 8px;
+      cursor: crosshair;
+    }
+
+    canvas.disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .print-draw-image {
+      display: none;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .part-block {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    .input-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .input-label {
+      font-size: 1rem;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    input[type="text"] {
+      padding: 8px 12px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+      width: 120px;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+    input[type="text"]:disabled {
+      background-color: #f1f5f9;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .feedback {
+      border-radius: 8px;
+      padding: 15px;
+      display: none;
+    }
+
+    .feedback.correct {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background-color: #dcfce7;
+      border: 1px solid #bbf7d0;
+      color: #15803d;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .tick-icon {
+      font-size: 1.8rem;
+      color: var(--success);
+    }
+
+    .feedback.incorrect {
+      display: block;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .feedback-heading {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--error);
+    }
+
+    .solution-method-block {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .method-header {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+
+    .math-working {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 6px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .student-answer-summary {
+      display: none;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff;
+        padding: 0;
+      }
+
+      .container {
+        box-shadow: none;
+        border: none;
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .workspace-layout {
+        display: block;
+      }
+
+      .user-header,
+      .difficulty-section,
+      #generateBtn,
+      #submitBtn,
+      #savePdfBtn,
+      .input-section,
+      .draw-controls {
+        display: none !important;
+      }
+
+      .student-answer-summary {
+        display: block !important;
+      }
+
+      .question-box {
+        border: 1px solid #cbd5e1;
+      }
+
+      .canvas-container {
+        display: none !important;
+      }
+
+      .print-draw-image {
+        display: block !important;
+        margin-top: 15px;
+        margin-bottom: 15px;
+      }
+
+      .feedback {
+        display: block !important;
+        border: 1px solid #cbd5e1;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+      }
+
+      .feedback-heading {
+        color: var(--error);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="user-header">
+      <label for="userNameInput">Name:</label>
+      <input type="text" id="userNameInput" placeholder="Enter your initials" />
+    </div>
+
+    <h1>Solving Simultaneous Linear Equations</h1>
+
+    <div class="difficulty-section">
+      <div class="difficulty-labels">
+        <span id="labelBasic" class="active">Basic</span>
+        <span id="labelInter" style="display:none;">Intermediate</span>
+        <span id="labelAdvance" style="display:none;">Advance</span>
+      </div>
+      <input type="range" min="1" max="1" value="1" class="slider" id="difficultySlider" disabled>
+    </div>
+
+    <button id="generateBtn">Generate Question</button>
+
+    <div class="workspace-layout">
+      <div class="left-column">
+        <div class="question-box">
+          <div class="question-prompt" id="questionPrompt">Click "Generate Question" to begin.</div>
+          <div class="equation-display" id="equationDisplay"></div>
+        </div>
+
+        <div class="input-section" id="inputSection" style="display: none;">
+          <div class="part-block">
+            <div class="input-row">
+              <span class="input-label">x = </span>
+              <input type="text" id="ansX" placeholder="e.g. 2 or 1/2" />
+            </div>
+            <div class="input-row">
+              <span class="input-label">y = </span>
+              <input type="text" id="ansY" placeholder="e.g. -3 or -3/4" />
+            </div>
+          </div>
+          <button id="submitBtn">Submit Answer</button>
+        </div>
+      </div>
+
+      <div class="right-column">
+        <div class="draw-section" id="drawSection" style="display: none;">
+          <div class="draw-header">
+            <span class="draw-title">Working Space (Draw / Scratchpad):</span>
+            <div class="draw-controls">
+              <button type="button" class="draw-btn" id="undoDrawBtn">Undo</button>
+              <button type="button" class="draw-btn" id="clearDrawBtn">Clear</button>
+            </div>
+          </div>
+          <div class="canvas-container">
+            <canvas id="workingCanvas"></canvas>
+          </div>
+          <img id="printDrawImage" class="print-draw-image" alt="Student Working Drawing" />
+        </div>
+      </div>
+    </div>
+
+    <div class="student-answer-summary" id="studentAnswerSummary"></div>
+    <div class="feedback" id="feedbackBox"></div>
+    <button id="savePdfBtn" class="btn-secondary" style="display: none;">Save PDF</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+    import { getFirestore, collection, addDoc, doc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAd0olTVny--vwE9UVzh5YRDE7lzha6y08",
+      authDomain: "qg-summary.firebaseapp.com",
+      projectId: "qg-summary",
+      storageBucket: "qg-summary.firebasestorage.app",
+      messagingSenderId: "660515596494",
+      appId: "1:660515596494:web:11d5aacc8c3937f452089f",
+      measurementId: "G-5T9WWML4EK"
+    };
+
+    let db;
+    try {
+      const app = initializeApp(firebaseConfig);
+      getAnalytics(app);
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn("Firebase initialization warning:", e);
+    }
+
+    window.recordCorrectSubmission = async function() {
+      if (!db) return;
+      const userNameInput = document.getElementById('userNameInput');
+      const name = userNameInput.value.trim() || 'Anonymous';
+
+      try {
+        await addDoc(collection(db, "submissions"), {
+          name: name,
+          timestamp: serverTimestamp(),
+          Chapter: 'Chap3.4'
+        });
+
+        const counterRef = doc(db, "counter", name);
+        await setDoc(counterRef, {
+          name: name,
+          Chap3_4: increment(1),
+          countTotal: increment(1)
+        }, { merge: true });
+
+      } catch (err) {
+        console.error("Firebase write error:", err);
+      }
+    };
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let currentProblem = null;
+      let isSubmitted = false;
+
+      const generateBtn = document.getElementById('generateBtn');
+      const submitBtn = document.getElementById('submitBtn');
+      const questionPrompt = document.getElementById('questionPrompt');
+      const equationDisplay = document.getElementById('equationDisplay');
+      const inputSection = document.getElementById('inputSection');
+      const feedbackBox = document.getElementById('feedbackBox');
+      const savePdfBtn = document.getElementById('savePdfBtn');
+      const studentAnswerSummary = document.getElementById('studentAnswerSummary');
+
+      const ansXInput = document.getElementById('ansX');
+      const ansYInput = document.getElementById('ansY');
+
+      const drawSection = document.getElementById('drawSection');
+      const canvas = document.getElementById('workingCanvas');
+      const ctx = canvas.getContext('2d');
+      const clearDrawBtn = document.getElementById('clearDrawBtn');
+      const undoDrawBtn = document.getElementById('undoDrawBtn');
+      const printDrawImage = document.getElementById('printDrawImage');
+
+      let isDrawing = false;
+      let strokeHistory = [];
+      let currentStroke = [];
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          redrawCanvas();
+        }
+      }
+
+      function getCanvasCoordinates(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      function startDrawing(e) {
+        if (isSubmitted) return;
+        isDrawing = true;
+        const pos = getCanvasCoordinates(e);
+        currentStroke = [{ x: pos.x, y: pos.y }];
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      }
+
+      function draw(e) {
+        if (!isDrawing || isSubmitted) return;
+        e.preventDefault();
+        const pos = getCanvasCoordinates(e);
+        currentStroke.push({ x: pos.x, y: pos.y });
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#0f172a';
+
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+
+      function stopDrawing() {
+        if (!isDrawing) return;
+        isDrawing = false;
+        if (currentStroke.length > 0) {
+          strokeHistory.push([...currentStroke]);
+          currentStroke = [];
+        }
+      }
+
+      function redrawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#0f172a';
+
+        strokeHistory.forEach(stroke => {
+          if (stroke.length < 2) return;
+          ctx.beginPath();
+          ctx.moveTo(stroke[0].x, stroke[0].y);
+          for (let i = 1; i < stroke.length; i++) {
+            ctx.lineTo(stroke[i].x, stroke[i].y);
+          }
+          ctx.stroke();
+        });
+      }
+
+      function clearCanvas() {
+        if (isSubmitted) return;
+        strokeHistory = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function undoCanvas() {
+        if (isSubmitted) return;
+        strokeHistory.pop();
+        redrawCanvas();
+      }
+
+      function syncPrintImage() {
+        printDrawImage.src = canvas.toDataURL('image/png');
+      }
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseleave', stopDrawing);
+
+      canvas.addEventListener('touchstart', startDrawing, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', stopDrawing);
+
+      clearDrawBtn.addEventListener('click', clearCanvas);
+      undoDrawBtn.addEventListener('click', undoCanvas);
+      window.addEventListener('resize', resizeCanvas);
+
+      // --- Math Helpers ---
+      function gcd(a, b) {
+        a = Math.abs(a);
+        b = Math.abs(b);
+        while (b) {
+          let t = b;
+          b = a % b;
+          a = t;
+        }
+        return a;
+      }
+
+      function lcm(a, b) {
+        return Math.abs(a * b) / gcd(a, b);
+      }
+
+      function getRandomNonZeroInt(min, max) {
+        let val = 0;
+        while (val === 0) {
+          val = Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        return val;
+      }
+
+      class Fraction {
+        constructor(n, d = 1) {
+          if (d === 0) throw new Error("Division by zero");
+          if (d < 0) {
+            n = -n;
+            d = -d;
+          }
+          const g = gcd(n, d);
+          this.n = n / g;
+          this.d = d / g;
+        }
+
+        equals(other) {
+          return this.n === other.n && this.d === other.d;
+        }
+
+        toString() {
+          if (this.d === 1) return `${this.n}`;
+          return `${this.n}/${this.d}`;
+        }
+
+        toFormattedString() {
+          return this.toString();
+        }
+      }
+
+      function parseFraction(str) {
+        str = str.trim().replace(/\s+/g, '');
+        if (!str) return null;
+        if (str.includes('/')) {
+          const parts = str.split('/');
+          if (parts.length !== 2) return null;
+          const num = parseInt(parts[0], 10);
+          const den = parseInt(parts[1], 10);
+          if (isNaN(num) || isNaN(den) || den === 0) return null;
+          return new Fraction(num, den);
+        } else {
+          const val = parseInt(str, 10);
+          if (isNaN(val)) return null;
+          return new Fraction(val, 1);
+        }
+      }
+
+      function formatTerm(coeff, varName, isFirst = false) {
+        if (coeff === 0) return '';
+        let sign = coeff > 0 ? (isFirst ? '' : ' + ') : (isFirst ? '-' : ' - ');
+        let absCoeff = Math.abs(coeff);
+        let coeffStr = absCoeff === 1 ? '' : `${absCoeff}`;
+        return `${sign}${coeffStr}${varName}`;
+      }
+
+      function formatEquation(a, b, c) {
+        let xTerm = formatTerm(a, 'x', true);
+        let yTerm = formatTerm(b, 'y', false);
+        return `${xTerm}${yTerm} = ${c}`;
+      }
+
+      function generateQuestionData() {
+        let a1, b1, c1, a2, b2, c2;
+        while (true) {
+          a1 = getRandomNonZeroInt(-6, 6);
+          b1 = getRandomNonZeroInt(-6, 6);
+          c1 = getRandomNonZeroInt(-12, 12);
+
+          a2 = getRandomNonZeroInt(-6, 6);
+          b2 = getRandomNonZeroInt(-6, 6);
+          c2 = getRandomNonZeroInt(-12, 12);
+
+          // Ensure a1:b1 != a2:b2 => a1*b2 != a2*b1
+          if (a1 * b2 !== a2 * b1) {
+            break;
+          }
+        }
+
+        const D = a1 * b2 - a2 * b1;
+        const Dx = c1 * b2 - c2 * b1;
+        const Dy = a1 * c2 - a2 * c1;
+
+        const solX = new Fraction(Dx, D);
+        const solY = new Fraction(Dy, D);
+
+        return {
+          eq1: { a: a1, b: b1, c: c1 },
+          eq2: { a: a2, b: b2, c: c2 },
+          solX,
+          solY
+        };
+      }
+
+      function generateSubstitutionSteps(prob) {
+        const { a: a1, b: b1, c: c1 } = prob.eq1;
+        const { a: a2, b: b2, c: c2 } = prob.eq2;
+
+        const coeffs = [
+          { val: Math.abs(a1), eq: 1, var: 'x', a: a1, b: b1, c: c1, otherA: a2, otherB: b2, otherC: c2 },
+          { val: Math.abs(b1), eq: 1, var: 'y', a: a1, b: b1, c: c1, otherA: a2, otherB: b2, otherC: c2 },
+          { val: Math.abs(a2), eq: 2, var: 'x', a: a2, b: b2, c: c2, otherA: a1, otherB: b1, otherC: c1 },
+          { val: Math.abs(b2), eq: 2, var: 'y', a: a2, b: b2, c: c2, otherA: a1, otherB: b1, otherC: c1 }
+        ];
+
+        coeffs.sort((p, q) => p.val - q.val);
+        const target = coeffs[0];
+
+        let html = '';
+        const eqLabel = target.eq;
+        const otherEqLabel = target.eq === 1 ? 2 : 1;
+
+        if (target.var === 'x') {
+          html += `Step (a): Rearrange equation (${eqLabel}) to make x the subject:<br/>`;
+          html += `&nbsp;&nbsp;x = (${target.c} ${target.b > 0 ? '-' : '+'} ${Math.abs(target.b)}y) / ${target.a}<br/>`;
+
+          html += `Step (b): Substitute this expression into equation (${otherEqLabel}):<br/>`;
+          html += `&nbsp;&nbsp;${target.otherA}[(${target.c} ${target.b > 0 ? '-' : '+'} ${Math.abs(target.b)}y) / ${target.a}] ${target.otherB > 0 ? '+' : '-'} ${Math.abs(target.otherB)}y = ${target.otherC}<br/>`;
+
+          html += `Step (c): Solve for y:<br/>`;
+          html += `&nbsp;&nbsp;y = ${prob.solY.toFormattedString()}<br/>`;
+
+          html += `Step (d): Substitute y = ${prob.solY.toFormattedString()} back to find x:<br/>`;
+          html += `&nbsp;&nbsp;x = ${prob.solX.toFormattedString()}<br/>`;
+        } else {
+          html += `Step (a): Rearrange equation (${eqLabel}) to make y the subject:<br/>`;
+          html += `&nbsp;&nbsp;y = (${target.c} ${target.a > 0 ? '-' : '+'} ${Math.abs(target.a)}x) / ${target.b}<br/>`;
+
+          html += `Step (b): Substitute this expression into equation (${otherEqLabel}):<br/>`;
+          html += `&nbsp;&nbsp;${target.otherA}x ${target.otherB > 0 ? '+' : '-'} ${Math.abs(target.otherB)}[(${target.c} ${target.a > 0 ? '-' : '+'} ${Math.abs(target.a)}x) / ${target.b}] = ${target.otherC}<br/>`;
+
+          html += `Step (c): Solve for x:<br/>`;
+          html += `&nbsp;&nbsp;x = ${prob.solX.toFormattedString()}<br/>`;
+
+          html += `Step (d): Substitute x = ${prob.solX.toFormattedString()} back to find y:<br/>`;
+          html += `&nbsp;&nbsp;y = ${prob.solY.toFormattedString()}<br/>`;
+        }
+
+        return html;
+      }
+
+      function generateEliminationSteps(prob) {
+        const { a: a1, b: b1, c: c1 } = prob.eq1;
+        const { a: a2, b: b2, c: c2 } = prob.eq2;
+
+        const lcmX = lcm(a1, a2);
+        const lcmY = lcm(b1, b2);
+
+        let chosenVar = lcmX <= lcmY ? 'x' : 'y';
+
+        let html = '';
+        if (chosenVar === 'x') {
+          let m1 = lcmX / a1;
+          let m2 = lcmX / a2;
+
+          let ma1 = a1 * m1, mb1 = b1 * m1, mc1 = c1 * m1;
+          let ma2 = a2 * m2, mb2 = b2 * m2, mc2 = c2 * m2;
+
+          html += `Step (a): Pick variable 'x' (LCM of coefficients |${a1}| and |${a2}| is ${lcmX}).<br/>`;
+          html += `Step (b): Multiply equations so 'x' coefficients match ${lcmX}:<br/>`;
+          html += `&nbsp;&nbsp;Eq (1) × (${m1}): ${formatEquation(ma1, mb1, mc1)} &nbsp;&nbsp;--- (3)<br/>`;
+          html += `&nbsp;&nbsp;Eq (2) × (${m2}): ${formatEquation(ma2, mb2, mc2)} &nbsp;&nbsp;--- (4)<br/>`;
+
+          html += `Step (c): Subtract (4) from (3):<br/>`;
+          html += `&nbsp;&nbsp;(${ma1}x ${mb1 >= 0 ? '+' : '-'} ${Math.abs(mb1)}y) - (${ma2}x ${mb2 >= 0 ? '+' : '-'} ${Math.abs(mb2)}y) = ${mc1} - (${mc2})<br/>`;
+          html += `&nbsp;&nbsp;(${mb1 - mb2})y = ${mc1 - mc2}<br/>`;
+
+          html += `Step (d): Solve for y:<br/>`;
+          html += `&nbsp;&nbsp;y = ${prob.solY.toFormattedString()}<br/>`;
+
+          html += `Step (e): Substitute y = ${prob.solY.toFormattedString()} into Eq (1) to solve for x:<br/>`;
+          html += `&nbsp;&nbsp;x = ${prob.solX.toFormattedString()}<br/>`;
+        } else {
+          let m1 = lcmY / b1;
+          let m2 = lcmY / b2;
+
+          let ma1 = a1 * m1, mb1 = b1 * m1, mc1 = c1 * m1;
+          let ma2 = a2 * m2, mb2 = b2 * m2, mc2 = c2 * m2;
+
+          html += `Step (a): Pick variable 'y' (LCM of coefficients |${b1}| and |${b2}| is ${lcmY}).<br/>`;
+          html += `Step (b): Multiply equations so 'y' coefficients match ${lcmY}:<br/>`;
+          html += `&nbsp;&nbsp;Eq (1) × (${m1}): ${formatEquation(ma1, mb1, mc1)} &nbsp;&nbsp;--- (3)<br/>`;
+          html += `&nbsp;&nbsp;Eq (2) × (${m2}): ${formatEquation(ma2, mb2, mc2)} &nbsp;&nbsp;--- (4)<br/>`;
+
+          html += `Step (c): Subtract (4) from (3):<br/>`;
+          html += `&nbsp;&nbsp;(${ma1}x ${mb1 >= 0 ? '+' : '-'} ${Math.abs(mb1)}y) - (${ma2}x ${mb2 >= 0 ? '+' : '-'} ${Math.abs(mb2)}y) = ${mc1} - (${mc2})<br/>`;
+          html += `&nbsp;&nbsp;(${ma1 - ma2})x = ${mc1 - mc2}<br/>`;
+
+          html += `Step (d): Solve for x:<br/>`;
+          html += `&nbsp;&nbsp;x = ${prob.solX.toFormattedString()}<br/>`;
+
+          html += `Step (e): Substitute x = ${prob.solX.toFormattedString()} into Eq (1) to solve for y:<br/>`;
+          html += `&nbsp;&nbsp;y = ${prob.solY.toFormattedString()}<br/>`;
+        }
+
+        return html;
+      }
+
+      function enableInputs() {
+        submitBtn.disabled = false;
+        ansXInput.disabled = false;
+        ansYInput.disabled = false;
+        undoDrawBtn.disabled = false;
+        clearDrawBtn.disabled = false;
+        canvas.classList.remove('disabled');
+      }
+
+      function disableInputs() {
+        submitBtn.disabled = true;
+        ansXInput.disabled = true;
+        ansYInput.disabled = true;
+        undoDrawBtn.disabled = true;
+        clearDrawBtn.disabled = true;
+        canvas.classList.add('disabled');
+      }
+
+      generateBtn.addEventListener('click', () => {
+        isSubmitted = false;
+        feedbackBox.style.display = 'none';
+        feedbackBox.className = 'feedback';
+        studentAnswerSummary.style.display = 'none';
+
+        ansXInput.value = '';
+        ansYInput.value = '';
+
+        enableInputs();
+        clearCanvas();
+
+        currentProblem = generateQuestionData();
+
+        questionPrompt.textContent = "Solve the pair of simultaneous equations.";
+        equationDisplay.innerHTML = `
+          <div>(1) &nbsp; ${formatEquation(currentProblem.eq1.a, currentProblem.eq1.b, currentProblem.eq1.c)}</div>
+          <div>(2) &nbsp; ${formatEquation(currentProblem.eq2.a, currentProblem.eq2.b, currentProblem.eq2.c)}</div>
+        `;
+
+        inputSection.style.display = 'flex';
+        drawSection.style.display = 'flex';
+        savePdfBtn.style.display = 'none';
+
+        setTimeout(resizeCanvas, 50);
+      });
+
+      submitBtn.addEventListener('click', handleSubmit);
+
+      function handleSubmit() {
+        if (isSubmitted || !currentProblem) return;
+
+        const userXStr = ansXInput.value;
+        const userYStr = ansYInput.value;
+
+        const userX = parseFraction(userXStr);
+        const userY = parseFraction(userYStr);
+
+        if (!userX || !userY) {
+          alert('Please enter valid answers for both x and y (integers or fractions like 3/4).');
+          return;
+        }
+
+        isSubmitted = true;
+        disableInputs();
+
+        const isXCorrect = userX.equals(currentProblem.solX);
+        const isYCorrect = userY.equals(currentProblem.solY);
+        const isAllCorrect = isXCorrect && isYCorrect;
+
+        const userName = document.getElementById('userNameInput').value.trim();
+        let summaryHtml = `<strong>Name:</strong> ${userName || 'N/A'}<br/>`;
+        summaryHtml += `<strong>Your Answer:</strong> x = ${userXStr}, y = ${userYStr}`;
+        studentAnswerSummary.innerHTML = summaryHtml;
+        studentAnswerSummary.style.display = 'none';
+
+        if (isAllCorrect) {
+          feedbackBox.className = 'feedback correct';
+          feedbackBox.innerHTML = '<span class="tick-icon">✓</span> Correct! Outstanding work!';
+          if (window.recordCorrectSubmission) {
+            window.recordCorrectSubmission();
+          }
+        } else {
+          feedbackBox.className = 'feedback incorrect';
+          let fbHtml = `<div class="feedback-heading">Incorrect</div>`;
+
+          fbHtml += `<div class="solution-method-block">`;
+          fbHtml += `<div class="method-header">Substitution Method</div>`;
+          fbHtml += `<div class="math-working">${generateSubstitutionSteps(currentProblem)}</div>`;
+          fbHtml += `</div>`;
+
+          fbHtml += `<div class="solution-method-block">`;
+          fbHtml += `<div class="method-header">Elimination Method</div>`;
+          fbHtml += `<div class="math-working">${generateEliminationSteps(currentProblem)}</div>`;
+          fbHtml += `</div>`;
+
+          feedbackBox.innerHTML = fbHtml;
+        }
+
+        feedbackBox.style.display = isAllCorrect ? 'flex' : 'block';
+        savePdfBtn.style.display = 'block';
+        syncPrintImage();
+      }
+
+      savePdfBtn.addEventListener('click', () => {
+        syncPrintImage();
+        window.print();
+      });
+    });
+  </script>
+</body>
+</html>
