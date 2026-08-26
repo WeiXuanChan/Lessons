@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simplifying Algebraic Fractions</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #0284c7;
+      --secondary-hover: #0369a1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --error: #dc2626;
+      --disabled: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 1100px;
+      padding: 30px;
+      position: relative;
+    }
+
+    .user-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .user-header label {
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .user-header input {
+      max-width: 250px;
+      padding: 6px 12px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-top: 0;
+      margin-bottom: 25px;
+    }
+
+    .difficulty-section {
+      margin-bottom: 25px;
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .difficulty-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .difficulty-labels span {
+      flex: 1;
+      text-align: center;
+      color: var(--disabled);
+    }
+
+    .difficulty-labels span.active {
+      color: var(--primary);
+    }
+
+    .slider {
+      width: 100%;
+      appearance: none;
+      height: 8px;
+      border-radius: 5px;
+      background: #cbd5e1;
+      outline: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+
+    .workspace-layout {
+      display: flex;
+      gap: 25px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+
+    .left-column {
+      flex: 1.2;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right-column {
+      flex: 0.8;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 850px) {
+      .workspace-layout {
+        flex-direction: column;
+      }
+    }
+
+    button {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-bottom: 20px;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button:disabled {
+      background-color: var(--disabled) !important;
+      cursor: not-allowed !important;
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      margin-top: 15px;
+      margin-bottom: 0;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--secondary-hover);
+    }
+
+    .question-box {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .question-prompt {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .equation-display {
+      font-size: 1.2rem;
+      font-weight: bold;
+      line-height: 1.8;
+      background: #f1f5f9;
+      padding: 15px 20px;
+      border-radius: 6px;
+      text-align: center;
+      overflow-x: auto;
+    }
+
+    .draw-section {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .draw-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .draw-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    .draw-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .draw-btn {
+      width: auto;
+      padding: 4px 10px;
+      margin-bottom: 0;
+      font-size: 0.8rem;
+      background-color: #e2e8f0;
+      color: var(--text);
+    }
+
+    .draw-btn:hover {
+      background-color: #cbd5e1;
+    }
+
+    .canvas-container {
+      width: 100%;
+      flex: 1;
+      min-height: 320px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: #ffffff;
+      touch-action: none;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 8px;
+      cursor: crosshair;
+    }
+
+    canvas.disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .print-draw-image {
+      display: none;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .part-block {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .fraction-input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      max-width: 260px;
+      margin: 0 auto;
+    }
+
+    .fraction-input-container input[type="text"] {
+      width: 100%;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+
+    .fraction-divider {
+      width: 100%;
+      height: 2px;
+      background-color: var(--text);
+    }
+
+    .feedback {
+      border-radius: 8px;
+      padding: 15px;
+      display: none;
+    }
+
+    .feedback.correct {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background-color: #dcfce7;
+      border: 1px solid #bbf7d0;
+      color: #15803d;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .tick-icon {
+      font-size: 1.8rem;
+      color: var(--success);
+    }
+
+    .feedback.incorrect {
+      display: block;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .feedback-heading {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--error);
+    }
+
+    .solution-method-block {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .method-header {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+
+    .math-working {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      background: #f8fafc;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 3px solid var(--primary);
+      overflow-x: auto;
+    }
+
+    .step-block {
+      margin-bottom: 18px;
+    }
+
+    .step-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .step-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #334155;
+    }
+
+    /* Stacked Fraction Formatting Components */
+    .frac-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      vertical-align: middle;
+      margin: 4px 0;
+    }
+
+    .frac-stacked {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: middle;
+      padding: 0 4px;
+    }
+
+    .frac-num {
+      text-align: center;
+      padding: 0 4px 2px 4px;
+      border-bottom: 2px solid #1e293b;
+      width: 100%;
+      white-space: nowrap;
+    }
+
+    .frac-den {
+      text-align: center;
+      padding: 2px 4px 0 4px;
+      width: 100%;
+      white-space: nowrap;
+    }
+
+    .student-answer-summary {
+      display: none;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff;
+        padding: 0;
+      }
+
+      .container {
+        box-shadow: none;
+        border: none;
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .workspace-layout {
+        display: block;
+      }
+
+      .user-header,
+      .difficulty-section,
+      #generateBtn,
+      #submitBtn,
+      #savePdfBtn,
+      .input-section,
+      .draw-controls {
+        display: none !important;
+      }
+
+      .student-answer-summary {
+        display: block !important;
+      }
+
+      .question-box {
+        border: 1px solid #cbd5e1;
+      }
+
+      .canvas-container {
+        display: none !important;
+      }
+
+      .print-draw-image {
+        display: block !important;
+        margin-top: 15px;
+        margin-bottom: 15px;
+      }
+
+      .feedback {
+        display: block !important;
+        border: 1px solid #cbd5e1;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+      }
+
+      .feedback-heading {
+        color: var(--error);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="user-header">
+      <label for="userNameInput">Name:</label>
+      <input type="text" id="userNameInput" placeholder="Enter your initials" />
+    </div>
+
+    <h1>Simplifying Algebraic Fractions</h1>
+
+    <div class="difficulty-section">
+      <div class="difficulty-labels">
+        <span id="labelBasic" class="active">Basic</span>
+        <span id="labelInter" style="display:none;">Intermediate</span>
+        <span id="labelAdvance" style="display:none;">Advance</span>
+      </div>
+      <input type="range" min="1" max="1" value="1" class="slider" id="difficultySlider" disabled>
+    </div>
+
+    <button id="generateBtn">Generate Question</button>
+
+    <div class="workspace-layout">
+      <div class="left-column">
+        <div class="question-box">
+          <div class="question-prompt" id="questionPrompt">Click "Generate Question" to begin.</div>
+          <div class="equation-display" id="equationDisplay"></div>
+        </div>
+
+        <div class="input-section" id="inputSection" style="display: none;">
+          <div class="part-block">
+            <div style="text-align: center; margin-bottom: 8px; font-weight: 600;">Simplified Answer:</div>
+            <div class="fraction-input-container">
+              <input type="text" id="ansNum" placeholder="Numerator" />
+              <div class="fraction-divider"></div>
+              <input type="text" id="ansDen" placeholder="Denominator" />
+            </div>
+          </div>
+          <button id="submitBtn">Submit Answer</button>
+        </div>
+      </div>
+
+      <div class="right-column">
+        <div class="draw-section" id="drawSection" style="display: none;">
+          <div class="draw-header">
+            <span class="draw-title">Working Space (Draw / Scratchpad):</span>
+            <div class="draw-controls">
+              <button type="button" class="draw-btn" id="undoDrawBtn">Undo</button>
+              <button type="button" class="draw-btn" id="clearDrawBtn">Clear</button>
+            </div>
+          </div>
+          <div class="canvas-container">
+            <canvas id="workingCanvas"></canvas>
+          </div>
+          <img id="printDrawImage" class="print-draw-image" alt="Student Working Drawing" />
+        </div>
+      </div>
+    </div>
+
+    <div class="student-answer-summary" id="studentAnswerSummary"></div>
+    <div class="feedback" id="feedbackBox"></div>
+    <button id="savePdfBtn" class="btn-secondary" style="display: none;">Save PDF</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+    import { getFirestore, collection, addDoc, doc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAd0olTVny--vwE9UVzh5YRDE7lzha6y08",
+      authDomain: "qg-summary.firebaseapp.com",
+      projectId: "qg-summary",
+      storageBucket: "qg-summary.firebasestorage.app",
+      messagingSenderId: "660515596494",
+      appId: "1:660515596494:web:11d5aacc8c3937f452089f",
+      measurementId: "G-5T9WWML4EK"
+    };
+
+    let db;
+    try {
+      const app = initializeApp(firebaseConfig);
+      getAnalytics(app);
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn("Firebase initialization warning:", e);
+    }
+
+    window.recordCorrectSubmission = async function() {
+      if (!db) return;
+      const userNameInput = document.getElementById('userNameInput');
+      const name = userNameInput.value.trim() || 'Anonymous';
+
+      try {
+        await addDoc(collection(db, "submissions"), {
+          name: name,
+          timestamp: serverTimestamp(),
+          Chapter: 'Chap5'
+        });
+
+        const counterRef = doc(db, "counter", name);
+        await setDoc(counterRef, {
+          name: name,
+          Chap5: increment(1),
+          countTotal: increment(1)
+        }, { merge: true });
+
+      } catch (err) {
+        console.error("Firebase write error:", err);
+      }
+    };
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let currentProblem = null;
+      let isSubmitted = false;
+
+      const generateBtn = document.getElementById('generateBtn');
+      const submitBtn = document.getElementById('submitBtn');
+      const questionPrompt = document.getElementById('questionPrompt');
+      const equationDisplay = document.getElementById('equationDisplay');
+      const inputSection = document.getElementById('inputSection');
+      const feedbackBox = document.getElementById('feedbackBox');
+      const savePdfBtn = document.getElementById('savePdfBtn');
+      const studentAnswerSummary = document.getElementById('studentAnswerSummary');
+
+      const ansNumInput = document.getElementById('ansNum');
+      const ansDenInput = document.getElementById('ansDen');
+
+      const drawSection = document.getElementById('drawSection');
+      const canvas = document.getElementById('workingCanvas');
+      const ctx = canvas.getContext('2d');
+      const clearDrawBtn = document.getElementById('clearDrawBtn');
+      const undoDrawBtn = document.getElementById('undoDrawBtn');
+      const printDrawImage = document.getElementById('printDrawImage');
+
+      let isDrawing = false;
+      let strokeHistory = [];
+      let currentStroke = [];
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          redrawCanvas();
+        }
+      }
+
+      function getCanvasCoordinates(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      function startDrawing(e) {
+        if (isSubmitted) return;
+        isDrawing = true;
+        const pos = getCanvasCoordinates(e);
+        currentStroke = [{ x: pos.x, y: pos.y }];
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      }
+
+      function draw(e) {
+        if (!isDrawing || isSubmitted) return;
+        e.preventDefault();
+        const pos = getCanvasCoordinates(e);
+        currentStroke.push({ x: pos.x, y: pos.y });
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#0f172a';
+
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+
+      function stopDrawing() {
+        if (!isDrawing) return;
+        isDrawing = false;
+        if (currentStroke.length > 0) {
+          strokeHistory.push([...currentStroke]);
+          currentStroke = [];
+        }
+      }
+
+      function redrawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#0f172a';
+
+        strokeHistory.forEach(stroke => {
+          if (stroke.length < 2) return;
+          ctx.beginPath();
+          ctx.moveTo(stroke[0].x, stroke[0].y);
+          for (let i = 1; i < stroke.length; i++) {
+            ctx.lineTo(stroke[i].x, stroke[i].y);
+          }
+          ctx.stroke();
+        });
+      }
+
+      function clearCanvas() {
+        if (isSubmitted) return;
+        strokeHistory = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function undoCanvas() {
+        if (isSubmitted) return;
+        strokeHistory.pop();
+        redrawCanvas();
+      }
+
+      function syncPrintImage() {
+        printDrawImage.src = canvas.toDataURL('image/png');
+      }
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseleave', stopDrawing);
+
+      canvas.addEventListener('touchstart', startDrawing, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', stopDrawing);
+
+      clearDrawBtn.addEventListener('click', clearCanvas);
+      undoDrawBtn.addEventListener('click', undoCanvas);
+      window.addEventListener('resize', resizeCanvas);
+
+      // --- Mathematical Utilities & Expression Engine ---
+
+      function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function getRandomNonZeroInt(min, max) {
+        let v = 0;
+        while (v === 0) v = getRandomInt(min, max);
+        return v;
+      }
+
+      function gcd(a, b) {
+        a = Math.abs(a);
+        b = Math.abs(b);
+        while (b) {
+          let t = b;
+          b = a % b;
+          a = t;
+        }
+        return a || 1;
+      }
+
+      function cleanInput(str) {
+        return str.replace(/\s+/g, '').toLowerCase()
+          .replace(/–/g, '-').replace(/\*/g, '').replace(/\^/g, '');
+      }
+
+      function formatLinearTerm(coeff, varStr, forceSign = false) {
+        if (coeff === 0) return '';
+        let sign = coeff > 0 ? (forceSign ? '+' : '') : '-';
+        let absCoeff = Math.abs(coeff);
+        let cStr = (absCoeff === 1 && varStr !== '') ? '' : absCoeff.toString();
+        return `${sign}${cStr}${varStr}`;
+      }
+
+      function formatLinearExpr(coeff, varStr, constant) {
+        let term1 = formatLinearTerm(coeff, varStr, false);
+        let term2 = '';
+        if (constant !== 0) {
+          term2 = constant > 0 ? ` + ${constant}` : ` - ${Math.abs(constant)}`;
+        }
+        return term1 + term2;
+      }
+
+      // Dynamic expansion engine for (a*v1 + b)*(c*v2 + d)
+      function expandTwoVarExpr(a, b, v1, c, d, v2) {
+        if (v1 === v2) {
+          // Single variable expansion: e.g. (ax + b)(cx + d) = ac*x² + (ad+bc)*x + bd
+          let quadCoeff = a * c;
+          let linCoeff = a * d + b * c;
+          let constCoeff = b * d;
+
+          let varSq = v1 === 'x' ? 'x²' : (v1 === 'y' ? 'y²' : v1 + '²');
+          let t1 = formatLinearTerm(quadCoeff, varSq, false);
+          let t2 = formatLinearTerm(linCoeff, v1, linCoeff > 0);
+          let t3 = '';
+          if (constCoeff !== 0) {
+            t3 = constCoeff > 0 ? ` + ${constCoeff}` : ` - ${Math.abs(constCoeff)}`;
+          }
+          return (t1 + (t2 ? ' ' + t2 : '') + t3).trim();
+        } else {
+          // Bivariate expansion: (ax + b)(cy + d) = ac*xy + ad*x + bc*y + bd
+          let xyCoeff = a * c;
+          let xCoeff = a * d;
+          let yCoeff = b * c;
+          let constCoeff = b * d;
+
+          let t1 = formatLinearTerm(xyCoeff, `${v1}${v2}`, false);
+          let t2 = formatLinearTerm(xCoeff, v1, xCoeff > 0);
+          let t3 = formatLinearTerm(yCoeff, v2, yCoeff > 0);
+          let t4 = '';
+          if (constCoeff !== 0) {
+            t4 = constCoeff > 0 ? ` + ${constCoeff}` : ` - ${Math.abs(constCoeff)}`;
+          }
+          return [t1, t2, t3, t4].filter(t => t !== '').join(' ');
+        }
+      }
+
+      function buildStackedFrac(numHtml, denHtml) {
+        return `
+          <div class="frac-stacked">
+            <div class="frac-num">${numHtml}</div>
+            <div class="frac-den">${denHtml}</div>
+          </div>
+        `;
+      }
+
+      function generateQuestionData() {
+        let numVar = Math.random() < 0.5 ? 'x' : 'y';
+        let denVar = numVar === 'x' ? 'y' : 'x';
+
+        let numCoeff = getRandomNonZeroInt(1, 4);
+        let denCoeff = getRandomNonZeroInt(1, 4);
+        let numConst = getRandomInt(-5, 5);
+        let denConst = getRandomInt(-5, 5);
+
+        let g = gcd(numCoeff, denCoeff);
+        if (numConst % g === 0 && denConst % g === 0 && g > 1) {
+          numCoeff /= g;
+          denCoeff /= g;
+          numConst /= g;
+          denConst /= g;
+        }
+
+        let ansNumStr = formatLinearExpr(numCoeff, numVar, numConst);
+        let ansDenStr = formatLinearExpr(denCoeff, denVar, denConst);
+
+        let cVar = denVar; 
+        let cCoeff = getRandomNonZeroInt(1, 3);
+        let cConst = getRandomNonZeroInt(-4, 4);
+        let factorExpr = formatLinearExpr(cCoeff, cVar, cConst);
+
+        let isDivision = Math.random() < 0.5;
+        let opSymbol = isDivision ? '÷' : '×';
+
+        let multVar = denVar;
+        let multCoeff = getRandomNonZeroInt(1, 3);
+        let multConst = getRandomNonZeroInt(-4, 4);
+        let multTermStr = formatLinearExpr(multCoeff, multVar, multConst);
+
+        // Compute rigorous expansions
+        let expandedF1Num = expandTwoVarExpr(numCoeff, numConst, numVar, multCoeff, multConst, multVar);
+        let expandedF1Den = expandTwoVarExpr(cCoeff, cConst, cVar, multCoeff, multConst, multVar);
+
+        let qF1Num, qF1Den, qF2Num, qF2Den;
+        let step1F1Num, step1F1Den, step1F2Num, step1F2Den;
+        let step2Num, step2Den;
+
+        if (!isDivision) {
+          qF1Num = expandedF1Num;
+          qF1Den = expandedF1Den;
+          qF2Num = `(${factorExpr})`;
+          qF2Den = `(${ansDenStr})`;
+
+          step1F1Num = qF1Num; step1F1Den = qF1Den;
+          step1F2Num = qF2Num; step1F2Den = qF2Den;
+
+          step2Num = `(${expandedF1Num})(${factorExpr})`;
+          step2Den = `(${expandedF1Den})(${ansDenStr})`;
+        } else {
+          qF1Num = expandedF1Num;
+          qF1Den = `(${ansDenStr})`;
+          qF2Num = expandedF1Den;
+          qF2Den = `(${factorExpr})`;
+
+          step1F1Num = qF1Num; step1F1Den = qF1Den;
+          step1F2Num = `(${factorExpr})`; step1F2Den = `(${expandedF1Den})`;
+
+          step2Num = `(${expandedF1Num})(${factorExpr})`;
+          step2Den = `(${ansDenStr})(${expandedF1Den})`;
+        }
+
+        return {
+          op: opSymbol,
+          isDivision,
+          qF1Num, qF1Den, qF2Num, qF2Den,
+          step1F1Num, step1F1Den, step1F2Num, step1F2Den,
+          step2Num, step2Den,
+          ansNumStr, ansDenStr,
+          factorExpr, multTermStr,
+          expandedF1Num, expandedF1Den
+        };
+      }
+
+      function enableInputs() {
+        submitBtn.disabled = false;
+        ansNumInput.disabled = false;
+        ansDenInput.disabled = false;
+        undoDrawBtn.disabled = false;
+        clearDrawBtn.disabled = false;
+        canvas.classList.remove('disabled');
+      }
+
+      function disableInputs() {
+        submitBtn.disabled = true;
+        ansNumInput.disabled = true;
+        ansDenInput.disabled = true;
+        undoDrawBtn.disabled = true;
+        clearDrawBtn.disabled = true;
+        canvas.classList.add('disabled');
+      }
+
+      generateBtn.addEventListener('click', () => {
+        isSubmitted = false;
+        feedbackBox.style.display = 'none';
+        feedbackBox.className = 'feedback';
+        studentAnswerSummary.style.display = 'none';
+
+        ansNumInput.value = '';
+        ansDenInput.value = '';
+
+        enableInputs();
+        clearCanvas();
+
+        currentProblem = generateQuestionData();
+
+        questionPrompt.textContent = "Simplify the algebraic expression:";
+        
+        let frac1 = buildStackedFrac(currentProblem.qF1Num, currentProblem.qF1Den);
+        let frac2 = buildStackedFrac(currentProblem.qF2Num, currentProblem.qF2Den);
+
+        equationDisplay.innerHTML = `
+          <div class="frac-line" style="justify-content: center;">
+            ${frac1}
+            <span style="font-size: 1.4rem; margin: 0 10px;">${currentProblem.op}</span>
+            ${frac2}
+          </div>
+        `;
+
+        inputSection.style.display = 'flex';
+        drawSection.style.display = 'flex';
+        savePdfBtn.style.display = 'none';
+
+        setTimeout(resizeCanvas, 50);
+      });
+
+      submitBtn.addEventListener('click', handleSubmit);
+
+      function handleSubmit() {
+        if (isSubmitted || !currentProblem) return;
+
+        const userNum = ansNumInput.value.trim();
+        const userDen = ansDenInput.value.trim();
+
+        if (!userNum || !userDen) {
+          alert('Please enter both the numerator and denominator.');
+          return;
+        }
+
+        isSubmitted = true;
+        disableInputs();
+
+        const cleanUserNum = cleanInput(userNum);
+        const cleanUserDen = cleanInput(userDen);
+        const cleanTargetNum = cleanInput(currentProblem.ansNumStr);
+        const cleanTargetDen = cleanInput(currentProblem.ansDenStr);
+
+        const isCorrect = (cleanUserNum === cleanTargetNum) && (cleanUserDen === cleanTargetDen);
+
+        const userName = document.getElementById('userNameInput').value.trim();
+        let summaryHtml = `<strong>Name:</strong> ${userName || 'N/A'}<br/>`;
+        summaryHtml += `<strong>Your Answer:</strong> (${userNum}) / (${userDen})`;
+        studentAnswerSummary.innerHTML = summaryHtml;
+        studentAnswerSummary.style.display = 'none';
+
+        if (isCorrect) {
+          feedbackBox.className = 'feedback correct';
+          feedbackBox.innerHTML = '<span class="tick-icon">✓</span> Correct! Outstanding work!';
+          if (window.recordCorrectSubmission) {
+            window.recordCorrectSubmission();
+          }
+        } else {
+          feedbackBox.className = 'feedback incorrect';
+          let fbHtml = `<div class="feedback-heading">Incorrect</div>`;
+
+          fbHtml += `<div class="solution-method-block">`;
+          fbHtml += `<div class="method-header">Simplification Steps</div>`;
+          fbHtml += `<div class="math-working">`;
+
+          // Step 1
+          let step1Frac1 = buildStackedFrac(currentProblem.step1F1Num, currentProblem.step1F1Den);
+          let step1Frac2 = buildStackedFrac(currentProblem.step1F2Num, currentProblem.step1F2Den);
+          fbHtml += `<div class="step-block">`;
+          fbHtml += `<div class="step-title">${currentProblem.isDivision ? 'Step 1: Invert the second fraction and multiply' : 'Step 1: Write as multiplication of two fractions'}</div>`;
+          fbHtml += `<div class="frac-line">= ${step1Frac1} <span style="margin: 0 6px;">×</span> ${step1Frac2}</div>`;
+          fbHtml += `</div>`;
+
+          // Step 2
+          let step2Frac = buildStackedFrac(currentProblem.step2Num, currentProblem.step2Den);
+          fbHtml += `<div class="step-block">`;
+          fbHtml += `<div class="step-title">Step 2: Combine into a single fraction</div>`;
+          fbHtml += `<div class="frac-line">= ${step2Frac}</div>`;
+          fbHtml += `</div>`;
+
+          // Step 3
+          let numFactoringNotice = `Notice that ${currentProblem.expandedF1Num} = (${currentProblem.ansNumStr})(${currentProblem.multTermStr})`;
+          let denFactoringNotice = `Notice that ${currentProblem.expandedF1Den} = (${currentProblem.factorExpr})(${currentProblem.multTermStr})`;
+
+          let step3Frac = buildStackedFrac(
+            `(${currentProblem.ansNumStr})(${currentProblem.multTermStr})(${currentProblem.factorExpr})`,
+            `(${currentProblem.ansDenStr})(${currentProblem.multTermStr})(${currentProblem.factorExpr})`
+          );
+          fbHtml += `<div class="step-block">`;
+          fbHtml += `<div class="step-title">Step 3: Factorise quadratic/bivariate expressions into linear factors</div>`;
+          fbHtml += `<div style="font-size: 0.9rem; color: #64748b; margin-bottom: 6px;">
+                       • ${numFactoringNotice}<br/>
+                       • ${denFactoringNotice}
+                     </div>`;
+          fbHtml += `<div class="frac-line">= ${step3Frac}</div>`;
+          fbHtml += `</div>`;
+
+          // Step 4
+          let finalFrac = buildStackedFrac(`<strong>${currentProblem.ansNumStr}</strong>`, `<strong>${currentProblem.ansDenStr}</strong>`);
+          fbHtml += `<div class="step-block">`;
+          fbHtml += `<div class="step-title">Step 4: Cancel common terms [(${currentProblem.multTermStr}) and (${currentProblem.factorExpr})]</div>`;
+          fbHtml += `<div class="frac-line">= ${finalFrac}</div>`;
+          fbHtml += `</div>`;
+
+          fbHtml += `</div></div>`;
+
+          feedbackBox.innerHTML = fbHtml;
+        }
+
+        feedbackBox.style.display = isCorrect ? 'flex' : 'block';
+        savePdfBtn.style.display = 'block';
+        syncPrintImage();
+      }
+
+      savePdfBtn.addEventListener('click', () => {
+        syncPrintImage();
+        window.print();
+      });
+    });
+  </script>
+</body>
+</html>
