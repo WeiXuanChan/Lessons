@@ -303,6 +303,7 @@
       align-items: center;
       gap: 10px;
       margin-bottom: 8px;
+      flex-wrap: wrap;
     }
 
     .input-row:last-child {
@@ -315,7 +316,7 @@
       white-space: nowrap;
     }
 
-    select, input[type="text"] {
+    select, input[type="text"], input[type="number"] {
       padding: 8px 12px;
       font-size: 0.95rem;
       border: 1px solid var(--border);
@@ -328,11 +329,11 @@
       cursor: pointer;
     }
 
-    input[type="text"]:focus, select:focus {
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
       border-color: var(--primary);
     }
 
-    input[type="text"]:disabled, select:disabled {
+    input[type="text"]:disabled, input[type="number"]:disabled, select:disabled {
       background-color: #f1f5f9;
       color: #64748b;
       cursor: not-allowed;
@@ -368,10 +369,11 @@
       border-radius: 8px;
       padding: 15px;
       display: none;
+      margin-top: 15px;
     }
 
     .feedback.correct {
-      display: block;
+      display: block !important;
       background-color: #dcfce7;
       border: 1px solid #bbf7d0;
       color: #15803d;
@@ -380,7 +382,7 @@
     }
 
     .feedback.incorrect {
-      display: block;
+      display: block !important;
       background-color: #fef2f2;
       border: 1px solid #fecaca;
       color: #991b1b;
@@ -399,12 +401,14 @@
       border-radius: 8px;
       padding: 15px;
       margin-top: 15px;
+      color: var(--text);
     }
 
     .solution-line-title {
       font-weight: bold;
       font-size: 1.05rem;
       margin-bottom: 10px;
+      color: var(--text);
     }
 
     .math-working {
@@ -416,6 +420,8 @@
       border-radius: 6px;
       border-left: 3px solid var(--primary);
       margin-top: 10px;
+      white-space: pre-wrap;
+      color: var(--text);
     }
 
     .student-answer-summary {
@@ -428,6 +434,15 @@
     .number-line-interactive {
       cursor: pointer;
       user-select: none;
+      touch-action: none;
+    }
+
+    .draggable-circle {
+      cursor: grab;
+    }
+
+    .draggable-circle:active {
+      cursor: grabbing;
     }
 
     @media print {
@@ -600,7 +615,8 @@
       let studentBoundary = null;
       let studentClosed = false;
       let studentDirection = null;
-      let studentPartBChoice = null;
+      let studentCheckChoice = null;
+      let isDraggingBoundary = false;
 
       const generateBtn = document.getElementById('generateBtn');
       const questionPrompt = document.getElementById('questionPrompt');
@@ -720,6 +736,104 @@
       undoDrawBtn.addEventListener('click', undoCanvas);
       window.addEventListener('resize', resizeCanvas);
 
+      function gcd(a, b) {
+        a = Math.abs(a);
+        b = Math.abs(b);
+        while (b) {
+          let t = b;
+          b = a % b;
+          a = t;
+        }
+        return a;
+      }
+
+      function createFraction(n, d) {
+        if (d < 0) { n = -n; d = -d; }
+        const g = gcd(n, d);
+        return { n: n / g, d: d / g };
+      }
+
+      function formatImproperFraction(frac) {
+        const { n, d } = frac;
+        if (d === 1) return `${n}`;
+        return `${n}/${d}`;
+      }
+
+      function formatMixedFraction(frac) {
+        const { n, d } = frac;
+        if (d === 1) return `${n}`;
+        const isNeg = n < 0;
+        const absN = Math.abs(n);
+        const integer = Math.floor(absN / d);
+        const rem = absN % d;
+        const signStr = isNeg ? "-" : "";
+
+        if (integer === 0) {
+          return `${signStr}${rem}/${d}`;
+        }
+        return `${signStr}${integer} ${rem}/${d}`;
+      }
+
+      function parseMixedFraction(str) {
+        if (!str) return null;
+        str = str.trim();
+        let isNeg = false;
+        if (str.startsWith('-')) {
+          isNeg = true;
+          str = str.substring(1).trim();
+        }
+
+        if (str.includes(' ')) {
+          const parts = str.split(/\s+/);
+          if (parts.length !== 2) return null;
+          const integer = parseInt(parts[0], 10);
+          const fracParts = parts[1].split('/');
+          if (fracParts.length !== 2) return null;
+          const num = parseInt(fracParts[0], 10);
+          const den = parseInt(fracParts[1], 10);
+          if (isNaN(integer) || isNaN(num) || isNaN(den) || den === 0) return null;
+          const totalNum = integer * den + num;
+          return createFraction(isNeg ? -totalNum : totalNum, den);
+        } else if (str.includes('/')) {
+          const fracParts = str.split('/');
+          if (fracParts.length !== 2) return null;
+          const num = parseInt(fracParts[0], 10);
+          const den = parseInt(fracParts[1], 10);
+          if (isNaN(num) || isNaN(den) || den === 0) return null;
+          return createFraction(isNeg ? -num : num, den);
+        } else {
+          const val = parseInt(str, 10);
+          if (isNaN(val)) return null;
+          return createFraction(isNeg ? -val : val, 1);
+        }
+      }
+
+      function snapToFractionDen235(rawVal) {
+        const step = 1 / 30;
+        const stepsCount = Math.round(rawVal / step);
+        const quantized = stepsCount * step;
+
+        const total30th = Math.round(quantized * 30);
+        let bestFrac = null;
+        let minDiff = Infinity;
+
+        const intPart = Math.floor(total30th / 30);
+        const rem30 = ((total30th % 30) + 30) % 30;
+
+        const validDens = [1, 2, 3, 5];
+        for (let d of validDens) {
+          let num = Math.round((rem30 / 30) * d);
+          let valCandidate = intPart + num / d;
+          let diff = Math.abs(valCandidate - rawVal);
+          if (diff < minDiff) {
+            minDiff = diff;
+            let fullNum = intPart * d + num;
+            bestFrac = createFraction(fullNum, d);
+          }
+        }
+        return bestFrac;
+      }
+
       function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
@@ -780,10 +894,6 @@
 
           svgHtml += `<line x1="${x}" y1="${yAxis - 6}" x2="${x}" y2="${yAxis + 6}" stroke="#334155" stroke-width="2" />`;
           svgHtml += `<text x="${x}" y="${yAxis + 22}" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle">${val}</text>`;
-
-          if (isInteractive) {
-            svgHtml += `<rect x="${x - step / 2}" y="0" width="${step}" height="${viewBoxHeight}" fill="transparent" data-val="${val}" class="tick-click-target" />`;
-          }
         }
 
         if (state && state.boundary !== null && state.boundary >= minVal && state.boundary <= maxVal) {
@@ -798,10 +908,17 @@
 
           svgHtml += `<line x1="${cx}" y1="${cy}" x2="${cx}" y2="${yAxis}" stroke="#dc2626" stroke-width="2" stroke-dasharray="3,3" />`;
 
+          const circleClass = isInteractive ? 'draggable-circle' : '';
           if (state.closed) {
-            svgHtml += `<circle cx="${cx}" cy="${cy}" r="7" fill="#dc2626" stroke="#dc2626" stroke-width="2.5" />`;
+            svgHtml += `<circle id="boundaryCircle" class="${circleClass}" cx="${cx}" cy="${cy}" r="7" fill="#dc2626" stroke="#dc2626" stroke-width="2.5" />`;
           } else {
-            svgHtml += `<circle cx="${cx}" cy="${cy}" r="7" fill="#ffffff" stroke="#dc2626" stroke-width="2.5" />`;
+            svgHtml += `<circle id="boundaryCircle" class="${circleClass}" cx="${cx}" cy="${cy}" r="7" fill="#ffffff" stroke="#dc2626" stroke-width="2.5" />`;
+          }
+
+          let currentFrac = state.boundaryFrac || snapToFractionDen235(state.boundary);
+          if (currentFrac && currentFrac.d !== 1) {
+            let labelStr = formatMixedFraction(currentFrac);
+            svgHtml += `<text x="${cx}" y="${cy - 12}" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">${labelStr}</text>`;
           }
         }
 
@@ -838,98 +955,109 @@
           };
         } else {
           const inequalitySign = getRandomChoice(signs);
-          let boundary = getRandomInt(-4, 5);
+          
+          const denOptions = [2, 3, 5];
+          const bDen = getRandomChoice(denOptions);
+          let bNum = getRandomInt(-4 * bDen + 1, 5 * bDen - 1);
+          if (bNum % bDen === 0) bNum += 1;
+          
+          const boundaryFrac = createFraction(bNum, bDen);
+          const boundaryVal = boundaryFrac.n / boundaryFrac.d;
 
           const formType = getRandomInt(1, 6);
           let lhsStr = "", rhsStr = "";
           let stepDetails = {};
 
-          let a, b, c, rhsVal;
+          let a, b, c, rhsValFrac;
 
           if (formType === 1) {
             a = getRandomChoice([-4, -3, -2, 2, 3, 4, 5]);
             b = getRandomInt(1, 8);
-            rhsVal = a * boundary + b;
+            rhsValFrac = createFraction(a * boundaryFrac.n + b * boundaryFrac.d, boundaryFrac.d);
             lhsStr = `${formatExpr(a, 'x', 0)} + ${b}`;
-            rhsStr = `${rhsVal}`;
+            rhsStr = formatMixedFraction(rhsValFrac);
             stepDetails = {
               orig: `${lhsStr} ${inequalitySign} ${rhsStr}`,
               simplified: null,
-              collected: `${formatExpr(a, 'x', 0)} ${inequalitySign} ${rhsVal} - ${b}`,
-              isolated: `${formatExpr(a, 'x', 0)} ${inequalitySign} ${rhsVal - b}`,
+              collected: `${formatExpr(a, 'x', 0)} ${inequalitySign} ${formatImproperFraction(rhsValFrac)} - ${b}`,
+              isolated: `${formatExpr(a, 'x', 0)} ${inequalitySign} ${formatImproperFraction(createFraction(a * boundaryFrac.n, boundaryFrac.d))}`,
               coeff: a
             };
           } else if (formType === 2) {
             a = getRandomChoice([-4, -3, -2, 2, 3, 4, 5]);
             b = getRandomInt(1, 8);
-            rhsVal = a * boundary - b;
+            rhsValFrac = createFraction(a * boundaryFrac.n - b * boundaryFrac.d, boundaryFrac.d);
             lhsStr = `${formatExpr(a, 'x', 0)} - ${b}`;
-            rhsStr = `${rhsVal}`;
+            rhsStr = formatMixedFraction(rhsValFrac);
             stepDetails = {
               orig: `${lhsStr} ${inequalitySign} ${rhsStr}`,
               simplified: null,
-              collected: `${formatExpr(a, 'x', 0)} ${inequalitySign} ${rhsVal} + ${b}`,
-              isolated: `${formatExpr(a, 'x', 0)} ${inequalitySign} ${rhsVal + b}`,
+              collected: `${formatExpr(a, 'x', 0)} ${inequalitySign} ${formatImproperFraction(rhsValFrac)} + ${b}`,
+              isolated: `${formatExpr(a, 'x', 0)} ${inequalitySign} ${formatImproperFraction(createFraction(a * boundaryFrac.n, boundaryFrac.d))}`,
               coeff: a
             };
           } else if (formType === 3) {
             a = getRandomChoice([2, 3, 4]);
             c = getRandomChoice([1, 2, 3]);
             let r1 = getRandomInt(1, 6);
-            let r2 = (a + c) * boundary - r1;
+            let totalCoeff = a + c;
+            let r2Frac = createFraction(totalCoeff * boundaryFrac.n - r1 * boundaryFrac.d, boundaryFrac.d);
             lhsStr = `${formatExpr(a, 'x', 0)} + ${formatExpr(c, 'x', 0)}`;
-            rhsStr = `${r1} + ${r2}`;
+            rhsStr = `${r1} + (${formatMixedFraction(r2Frac)})`;
             stepDetails = {
               orig: `${lhsStr} ${inequalitySign} ${rhsStr}`,
-              simplified: `${formatExpr(a + c, 'x', 0)} ${inequalitySign} ${r1 + r2}`,
+              simplified: `${formatExpr(totalCoeff, 'x', 0)} ${inequalitySign} ${formatImproperFraction(createFraction(totalCoeff * boundaryFrac.n, boundaryFrac.d))}`,
               collected: null,
-              isolated: `${formatExpr(a + c, 'x', 0)} ${inequalitySign} ${r1 + r2}`,
-              coeff: a + c
+              isolated: `${formatExpr(totalCoeff, 'x', 0)} ${inequalitySign} ${formatImproperFraction(createFraction(totalCoeff * boundaryFrac.n, boundaryFrac.d))}`,
+              coeff: totalCoeff
             };
           } else if (formType === 4) {
             a = getRandomChoice([5, 6, 7]);
             c = getRandomChoice([1, 2, 3, 4]);
             if (a === c) c += 1;
+            let net = a - c;
             let r1 = getRandomInt(5, 12);
-            let r2 = r1 - (a - c) * boundary;
+            let r2Frac = createFraction(r1 * boundaryFrac.d - net * boundaryFrac.n, boundaryFrac.d);
             lhsStr = `${formatExpr(a, 'x', 0)} - ${formatExpr(c, 'x', 0)}`;
-            rhsStr = `${r1} - ${r2}`;
+            rhsStr = `${r1} - (${formatMixedFraction(r2Frac)})`;
             stepDetails = {
               orig: `${lhsStr} ${inequalitySign} ${rhsStr}`,
-              simplified: `${formatExpr(a - c, 'x', 0)} ${inequalitySign} ${r1 - r2}`,
+              simplified: `${formatExpr(net, 'x', 0)} ${inequalitySign} ${formatImproperFraction(createFraction(net * boundaryFrac.n, boundaryFrac.d))}`,
               collected: null,
-              isolated: `${formatExpr(a - c, 'x', 0)} ${inequalitySign} ${r1 - r2}`,
-              coeff: a - c
+              isolated: `${formatExpr(net, 'x', 0)} ${inequalitySign} ${formatImproperFraction(createFraction(net * boundaryFrac.n, boundaryFrac.d))}`,
+              coeff: net
             };
           } else if (formType === 5) {
             a = getRandomChoice([-2, -1, 2, 3]);
             c = getRandomChoice([2, 4]);
             if (a + c === 0) c += 1;
+            let net = a + c;
             b = getRandomInt(1, 6);
-            rhsVal = (a + c) * boundary + b;
+            rhsValFrac = createFraction(net * boundaryFrac.n + b * boundaryFrac.d, boundaryFrac.d);
             lhsStr = `${formatExpr(a, 'x', 0)} + ${b} + ${formatExpr(c, 'x', 0)}`;
-            rhsStr = `${rhsVal}`;
+            rhsStr = formatMixedFraction(rhsValFrac);
             stepDetails = {
               orig: `${lhsStr} ${inequalitySign} ${rhsStr}`,
-              simplified: `${formatExpr(a + c, 'x', 0)} + ${b} ${inequalitySign} ${rhsVal}`,
-              collected: `${formatExpr(a + c, 'x', 0)} ${inequalitySign} ${rhsVal} - ${b}`,
-              isolated: `${formatExpr(a + c, 'x', 0)} ${inequalitySign} ${rhsVal - b}`,
-              coeff: a + c
+              simplified: `${formatExpr(net, 'x', 0)} + ${b} ${inequalitySign} ${formatImproperFraction(rhsValFrac)}`,
+              collected: `${formatExpr(net, 'x', 0)} ${inequalitySign} ${formatImproperFraction(rhsValFrac)} - ${b}`,
+              isolated: `${formatExpr(net, 'x', 0)} ${inequalitySign} ${formatImproperFraction(createFraction(net * boundaryFrac.n, boundaryFrac.d))}`,
+              coeff: net
             };
           } else {
             a = getRandomChoice([-3, -2, 1, 2]);
             c = getRandomChoice([-2, -1]);
             if (a + c === 0) a += 1;
+            let net = a + c;
             b = getRandomInt(1, 6);
-            rhsVal = (a + c) * boundary - b;
+            rhsValFrac = createFraction(net * boundaryFrac.n - b * boundaryFrac.d, boundaryFrac.d);
             lhsStr = `${formatExpr(a, 'x', 0)} - ${b} ${c < 0 ? '-' : '+'} ${formatExpr(Math.abs(c), 'x', 0)}`;
-            rhsStr = `${rhsVal}`;
+            rhsStr = formatMixedFraction(rhsValFrac);
             stepDetails = {
               orig: `${lhsStr} ${inequalitySign} ${rhsStr}`,
-              simplified: `${formatExpr(a + c, 'x', 0)} - ${b} ${inequalitySign} ${rhsVal}`,
-              collected: `${formatExpr(a + c, 'x', 0)} ${inequalitySign} ${rhsVal} + ${b}`,
-              isolated: `${formatExpr(a + c, 'x', 0)} ${inequalitySign} ${rhsVal + b}`,
-              coeff: a + c
+              simplified: `${formatExpr(net, 'x', 0)} - ${b} ${inequalitySign} ${formatImproperFraction(rhsValFrac)}`,
+              collected: `${formatExpr(net, 'x', 0)} ${inequalitySign} ${formatImproperFraction(rhsValFrac)} + ${b}`,
+              isolated: `${formatExpr(net, 'x', 0)} ${inequalitySign} ${formatImproperFraction(createFraction(net * boundaryFrac.n, boundaryFrac.d))}`,
+              coeff: net
             };
           }
 
@@ -942,32 +1070,39 @@
           let isClosed = (finalSign === '≥' || finalSign === '≤');
           let direction = (finalSign === '>' || finalSign === '≥') ? 'right' : 'left';
 
-          let partBVal = boundary + getRandomChoice([-2, -1, 0, 1, 2]);
-          let isPartBTrue = false;
+          const checkDen = getRandomChoice([2, 3, 5]);
+          let offsetOptions = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5];
+          let pOffset = getRandomChoice(offsetOptions);
+          let rawPVal = boundaryVal + pOffset;
+          let pNum = Math.round(rawPVal * checkDen);
+          let checkFrac = createFraction(pNum, checkDen);
+          let checkValReal = checkFrac.n / checkFrac.d;
 
-          if (finalSign === '>') isPartBTrue = partBVal > boundary;
-          else if (finalSign === '≥') isPartBTrue = partBVal >= boundary;
-          else if (finalSign === '<') isPartBTrue = partBVal < boundary;
-          else if (finalSign === '≤') isPartBTrue = partBVal <= boundary;
+          let isCheckTrue = false;
+          if (finalSign === '>') isCheckTrue = checkValReal > boundaryVal;
+          else if (finalSign === '≥') isCheckTrue = checkValReal >= boundaryVal;
+          else if (finalSign === '<') isCheckTrue = checkValReal < boundaryVal;
+          else if (finalSign === '≤') isCheckTrue = checkValReal <= boundaryVal;
 
-          let minVal = boundary - 4;
-          let maxVal = boundary + 4;
+          let minVal = Math.floor(boundaryVal) - 3;
+          let maxVal = Math.ceil(boundaryVal) + 3;
 
           return {
             type: 'B',
             inequalityStr: `${lhsStr} ${inequalitySign} ${rhsStr}`,
-            boundary,
+            boundaryFrac,
+            boundaryVal,
+            boundaryStr: formatMixedFraction(boundaryFrac),
+            improperBoundaryStr: formatImproperFraction(boundaryFrac),
             finalSign,
             isClosed,
             direction,
             minVal,
             maxVal,
-            partBVal,
-            partBAns: isPartBTrue ? 'Yes' : 'No',
-            stepDetails,
-            lhsStr,
-            rhsStr,
-            inequalitySign
+            checkFrac,
+            checkStr: formatMixedFraction(checkFrac),
+            checkAns: isCheckTrue ? 'Yes' : 'No',
+            stepDetails
           };
         }
       }
@@ -976,8 +1111,10 @@
         const container = document.getElementById('nlInteractiveContainer');
         if (!container || !currentProblem || currentProblem.type !== 'B') return;
 
+        let frac = studentBoundary !== null ? snapToFractionDen235(studentBoundary) : null;
         const state = {
           boundary: studentBoundary,
+          boundaryFrac: frac,
           closed: studentClosed,
           direction: studentDirection
         };
@@ -986,45 +1123,74 @@
 
         const svgEl = document.getElementById('interactiveNumberLineSVG');
         if (svgEl) {
-          svgEl.addEventListener('click', handleNumberLineClick);
+          attachNumberLineEvents(svgEl);
         }
       }
 
-      function handleNumberLineClick(e) {
-        if (isSubmitted || !currentProblem || currentProblem.type !== 'B') return;
-
-        const svgEl = document.getElementById('interactiveNumberLineSVG');
-        if (!svgEl) return;
-
-        const rect = svgEl.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const padding = 40;
+      function attachNumberLineEvents(svgEl) {
         const viewBoxWidth = 500;
+        const padding = 40;
         const count = currentProblem.maxVal - currentProblem.minVal;
-        const step = (viewBoxWidth - 2 * padding) / count;
+        const stepWidth = (viewBoxWidth - 2 * padding) / count;
 
-        const svgX = (clickX / rect.width) * viewBoxWidth;
-        const clickedVal = Math.round(currentProblem.minVal + (svgX - padding) / step);
+        function getValueFromX(clientX) {
+          const rect = svgEl.getBoundingClientRect();
+          const clickX = clientX - rect.left;
+          const svgX = (clickX / rect.width) * viewBoxWidth;
+          const clampedSvgX = Math.max(padding, Math.min(svgX, viewBoxWidth - padding));
+          const rawVal = currentProblem.minVal + (clampedSvgX - padding) / stepWidth;
+          const snappedFrac = snapToFractionDen235(rawVal);
+          return snappedFrac.n / snappedFrac.d;
+        }
 
-        if (studentBoundary === null) {
-          if (clickedVal >= currentProblem.minVal && clickedVal <= currentProblem.maxVal) {
+        const circleEl = svgEl.querySelector('#boundaryCircle');
+
+        svgEl.addEventListener('pointerdown', (e) => {
+          if (isSubmitted || !currentProblem || currentProblem.type !== 'B') return;
+
+          const clickedVal = getValueFromX(e.clientX);
+
+          if (circleEl && (e.target === circleEl || e.target.closest('#boundaryCircle'))) {
+            isDraggingBoundary = true;
+            svgEl.setPointerCapture(e.pointerId);
+            return;
+          }
+
+          if (studentBoundary === null) {
             studentBoundary = clickedVal;
             studentClosed = false;
             studentDirection = null;
-          }
-        } else {
-          if (clickedVal === studentBoundary) {
-            studentClosed = !studentClosed;
           } else {
-            if (clickedVal < studentBoundary) {
-              studentDirection = 'left';
-            } else if (clickedVal > studentBoundary) {
-              studentDirection = 'right';
+            const diff = Math.abs(clickedVal - studentBoundary);
+            if (diff < 0.2) {
+              studentClosed = !studentClosed;
+            } else {
+              if (clickedVal < studentBoundary) {
+                studentDirection = 'left';
+              } else if (clickedVal > studentBoundary) {
+                studentDirection = 'right';
+              }
             }
           }
-        }
+          renderInteractiveNumberLine();
+        });
 
-        renderInteractiveNumberLine();
+        svgEl.addEventListener('pointermove', (e) => {
+          if (!isDraggingBoundary || isSubmitted) return;
+          const fineVal = getValueFromX(e.clientX);
+          studentBoundary = fineVal;
+          renderInteractiveNumberLine();
+        });
+
+        const handlePointerUp = (e) => {
+          if (isDraggingBoundary) {
+            isDraggingBoundary = false;
+            try { svgEl.releasePointerCapture(e.pointerId); } catch(err){}
+          }
+        };
+
+        svgEl.addEventListener('pointerup', handlePointerUp);
+        svgEl.addEventListener('pointercancel', handlePointerUp);
       }
 
       generateBtn.addEventListener('click', () => {
@@ -1036,7 +1202,7 @@
         studentBoundary = null;
         studentClosed = false;
         studentDirection = null;
-        studentPartBChoice = null;
+        studentCheckChoice = null;
 
         undoDrawBtn.disabled = false;
         clearDrawBtn.disabled = false;
@@ -1122,51 +1288,71 @@
                 <span class="input-label">${currentProblem.part4.expr2}</span>
               </div>
             </div>
-
-
             <button id="submitBtn">Submit Answer</button>
           `;
         } else {
-          questionPrompt.textContent = "Solve the linear inequality, represent it on the number line, and answer the sub-question.";
-          equationDisplay.innerHTML = `<div>Solve the inequality: <b>${currentProblem.inequalityStr}</b></div>`;
+          questionPrompt.textContent = "Solve the inequality, state the boundary value, draw your answer on the number line, and check a value.";
+          equationDisplay.innerHTML = `<div style="font-size: 1.4rem; font-weight: bold; text-align: center; color: var(--primary); margin: 10px 0;">${currentProblem.inequalityStr}</div>`;
 
           inputSection.innerHTML = `
             <div class="part-block">
-              <div class="part-title">(a) Solve and draw on number line</div>
-              <div class="input-row" style="margin-bottom: 12px;">
+              <div class="part-title">Step 1: Write down the final inequality solution for x</div>
+              <div class="input-row">
                 <span class="input-label">x</span>
                 <select id="ansSign">
-                  <option value="">Sign</option>
+                  <option value="">Select Sign</option>
                   <option value="≥">≥</option>
                   <option value="≤">≤</option>
                   <option value=">">&gt;</option>
                   <option value="<">&lt;</option>
                 </select>
-                <input type="text" id="ansVal" placeholder="value" style="width: 80px;" />
+                <input type="text" id="ansBoundary" placeholder="e.g. 2 1/3 or -1/2" style="width: 150px;">
               </div>
-              <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;">
-                <b>Interactive Number Line instructions:</b><br/>
-                1. Click a tick number to set start point.<br/>
-                2. Click left/right of point to draw ray.<br/>
-                3. Click the circle to toggle open/closed dot.
-              </div>
-              <div id="nlInteractiveContainer"></div>
-              <button type="button" class="draw-btn" id="resetNlBtn" style="margin-top: 8px; width: auto;">Reset Line</button>
             </div>
 
             <div class="part-block">
-              <div class="part-title">(b) Verification</div>
-              <div style="margin-bottom: 10px; font-size: 0.95rem;">
-                Is <b>${currentProblem.partBVal}</b> a possible solution for <i>x</i>?
+              <div class="part-title">Step 2: Represent the solution on the interactive number line</div>
+              <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;">
+                <b>Instructions:</b><br>
+                • <b>Click</b> on the line to set boundary.<br>
+                • <b>Click circle</b> to toggle Open / Solid.<br>
+                • <b>Click left/right</b> to set arrow direction.<br>
+                • <b>Drag circle</b> to fine-tune fraction location.
+              </div>
+              <div id="nlInteractiveContainer"></div>
+              <div style="text-align: right; margin-top: 5px;">
+                <button type="button" class="draw-btn" id="resetNlBtn" style="width: auto; padding: 4px 10px;">Reset Line</button>
+              </div>
+            </div>
+
+            <div class="part-block">
+              <div class="part-title">Step 3: Check value</div>
+              <div style="margin-bottom: 8px; font-size: 0.95rem;">
+                Is <b>x = ${currentProblem.checkStr}</b> a solution to the inequality?
               </div>
               <div class="btn-group">
-                <button type="button" class="choice-btn" id="btnYes">Yes</button>
-                <button type="button" class="choice-btn" id="btnNo">No</button>
+                <button type="button" class="choice-btn" id="btnCheckYes">Yes</button>
+                <button type="button" class="choice-btn" id="btnCheckNo">No</button>
               </div>
             </div>
 
             <button id="submitBtn">Submit Answer</button>
           `;
+
+          const btnYes = document.getElementById('btnCheckYes');
+          const btnNo = document.getElementById('btnCheckNo');
+          btnYes.addEventListener('click', () => {
+            if (isSubmitted) return;
+            studentCheckChoice = 'Yes';
+            btnYes.classList.add('selected');
+            btnNo.classList.remove('selected');
+          });
+          btnNo.addEventListener('click', () => {
+            if (isSubmitted) return;
+            studentCheckChoice = 'No';
+            btnNo.classList.add('selected');
+            btnYes.classList.remove('selected');
+          });
 
           const resetNlBtn = document.getElementById('resetNlBtn');
           resetNlBtn.addEventListener('click', () => {
@@ -1177,37 +1363,20 @@
             renderInteractiveNumberLine();
           });
 
-          const btnYes = document.getElementById('btnYes');
-          const btnNo = document.getElementById('btnNo');
-
-          btnYes.addEventListener('click', () => {
-            if (isSubmitted) return;
-            studentPartBChoice = 'Yes';
-            btnYes.classList.add('selected');
-            btnNo.classList.remove('selected');
-          });
-
-          btnNo.addEventListener('click', () => {
-            if (isSubmitted) return;
-            studentPartBChoice = 'No';
-            btnNo.classList.add('selected');
-            btnYes.classList.remove('selected');
-          });
-
           renderInteractiveNumberLine();
         }
 
-        inputSection.style.display = 'flex';
         drawSection.style.display = 'flex';
+        inputSection.style.display = 'flex';
         savePdfBtn.style.display = 'none';
 
-        setTimeout(resizeCanvas, 50);
-
         document.getElementById('submitBtn').addEventListener('click', handleSubmit);
+
+        setTimeout(resizeCanvas, 50);
       });
 
       function handleSubmit() {
-        if (isSubmitted) return;
+        if (!currentProblem || isSubmitted) return;
 
         if (currentProblem.type === 'A') {
           const ans1 = document.getElementById('ansPart1').value;
@@ -1216,185 +1385,243 @@
           const ans4 = document.getElementById('ansPart4').value;
 
           if (!ans1 || !ans2 || !ans3 || !ans4) {
-            alert('Please select an inequality sign for all parts.');
+            alert("Please select inequality signs for all 4 parts before submitting.");
             return;
           }
 
           isSubmitted = true;
-          disableInputs();
+          disableInputsTypeA();
 
-          const isPart1Correct = (ans1 === currentProblem.part1.correctSign);
-          const isPart2Correct = (ans2 === currentProblem.part2.correctSign);
-          const isPart3Correct = (ans3 === currentProblem.part3.correctSign);
-          const isPart4Correct = (ans4 === currentProblem.part4.correctSign);
-          const isAllCorrect = isPart1Correct && isPart2Correct && isPart3Correct && isPart4Correct;
+          const c1 = currentProblem.part1.correctSign;
+          const c2 = currentProblem.part2.correctSign;
+          const c3 = currentProblem.part3.correctSign;
+          const c4 = currentProblem.part4.correctSign;
 
-          const userName = document.getElementById('userNameInput').value.trim();
-          let summaryHtml = `<strong>Name:</strong> ${userName || 'N/A'}<br/>`;
-          summaryHtml += `<strong>(a) Your answer:</strong> ${currentProblem.part1.expr1} ${ans1} ${currentProblem.part1.expr2}<br/>`;
-          summaryHtml += `<strong>(b) Your answer:</strong> ${currentProblem.part2.expr1} ${ans2} ${currentProblem.part2.expr2}`;
-          summaryHtml += `<strong>(a) Your answer:</strong> ${currentProblem.part3.expr1} ${ans3} ${currentProblem.part3.expr2}<br/>`;
-          summaryHtml += `<strong>(b) Your answer:</strong> ${currentProblem.part4.expr1} ${ans4} ${currentProblem.part4.expr2}`;
-          studentAnswerSummary.innerHTML = summaryHtml;
-          studentAnswerSummary.style.display = 'none';
+          const isAllCorrect = (ans1 === c1 && ans2 === c2 && ans3 === c3 && ans4 === c4);
+
+          feedbackBox.style.display = 'block';
 
           if (isAllCorrect) {
             feedbackBox.className = 'feedback correct';
-            feedbackBox.innerHTML = 'Correct! Excellent work!';
-            if (window.recordCorrectSubmission) {
-              window.recordCorrectSubmission();
-            }
+            feedbackBox.innerHTML = `Great job! All 4 parts are correct! 🎉`;
+            if (window.recordCorrectSubmission) window.recordCorrectSubmission();
           } else {
             feedbackBox.className = 'feedback incorrect';
-            let fbHtml = `<div class="feedback-heading">Incorrect</div>`;
+            let html = `<div class="feedback-heading">Incorrect. Here is the step-by-step solution:</div>`;
 
-            fbHtml += `<div class="solution-line-block"><div class="solution-line-title">Step-by-Step Solution:</div>`;
+            const parts = [
+              { label: '(a)', p: currentProblem.part1, user: ans1, corr: c1, var1: 'a', var2: 'b' },
+              { label: '(b)', p: currentProblem.part2, user: ans2, corr: c2, var1: 'x', var2: 'y' },
+              { label: '(c)', p: currentProblem.part3, user: ans3, corr: c3, var1: 'p', var2: 'q' },
+              { label: '(d)', p: currentProblem.part4, user: ans4, corr: c4, var1: 'm', var2: 'n' }
+            ];
 
-              const renderFeedbackPart = (label, var1, var2, part) => {
-                let html = `<div style="margin-top: 10px; font-weight: bold;">Part (${label}):</div><div class="math-working">`;
-                html += `Given: ${var1} ${part.givenSign} ${var2}<br/>`;
-                if (part.coeff < 0) {
-                  html += `Multiplying or dividing by a negative number (${part.coeff}) REVERSES the inequality sign.<br/>`;
-                  html += `Sign changes from '${part.givenSign}' to '${part.correctSign}'.<br/>`;
-                } else {
-                  html += `Multiplying or dividing by a positive number (${part.coeff}) KEEPS the inequality sign unchanged.<br/>`;
-                }
-                html += `Correct Result: <b>${part.expr1} ${part.correctSign} ${part.expr2}</b></div>`;
-                return html;
-              };
+            parts.forEach(pt => {
+              const isPtCorr = (pt.user === pt.corr);
+              const flipNote = pt.p.coeff < 0
+                ? `Since we are multiplying/dividing by a <b>negative number (${pt.p.coeff})</b>, the inequality sign <b>flips</b> from <b>'${pt.p.givenSign}'</b> to <b>'${pt.p.correctSign}'</b>.`
+                : `Since we are multiplying/dividing by a <b>positive number (${pt.p.coeff})</b>, the inequality sign <b>remains '${pt.p.correctSign}'</b>.`;
 
-              fbHtml += renderFeedbackPart('a', 'a', 'b', currentProblem.part1);
-              fbHtml += renderFeedbackPart('b', 'x', 'y', currentProblem.part2);
-              fbHtml += renderFeedbackPart('c', 'p', 'q', currentProblem.part3);
-              fbHtml += renderFeedbackPart('d', 'm', 'n', currentProblem.part4);
+              html += `
+                <div class="solution-line-block">
+                  <div class="solution-line-title">
+                    Part ${pt.label}: ${isPtCorr ? '<span style="color:#16a34a;">✓ Correct</span>' : '<span style="color:#dc2626;">✗ Incorrect</span>'}
+                  </div>
+                  <div><b>Given:</b> ${pt.var1} ${pt.p.givenSign} ${pt.var2}</div>
+                  <div><b>Your Choice:</b> ${pt.user} &nbsp;|&nbsp; <b>Correct Sign:</b> ${pt.corr}</div>
+                  <div class="math-working">${pt.p.expr1} <b>${pt.corr}</b> ${pt.p.expr2}</div>
+                  <div style="margin-top:8px; font-size:0.9rem; color:#475569;">
+                    <b>Explanation:</b> ${flipNote}
+                  </div>
+                </div>
+              `;
+            });
 
-              fbHtml += `</div>`;
-              feedbackBox.innerHTML = fbHtml;
+            feedbackBox.innerHTML = html;
           }
 
         } else {
           const ansSign = document.getElementById('ansSign').value;
-          const ansValStr = document.getElementById('ansVal').value.trim();
-          const ansVal = parseInt(ansValStr, 10);
+          const ansBoundaryStr = document.getElementById('ansBoundary').value;
 
-          if (!ansSign || isNaN(ansVal)) {
-            alert('Please select a sign and enter a valid integer for part (a).');
+          if (!ansSign || !ansBoundaryStr.trim()) {
+            alert("Please select the sign and type your boundary value in Step 1.");
             return;
           }
 
-          if (studentBoundary === null || studentDirection === null) {
-            alert('Please draw the ray on the number line for part (a). Click a number tick, then click to the left or right.');
+          const parsedStudentBoundary = parseMixedFraction(ansBoundaryStr);
+          if (!parsedStudentBoundary) {
+            alert("Please enter a valid fraction/mixed number for the boundary value (e.g. 2 1/3, -1/2, or 3).");
             return;
           }
 
-          if (!studentPartBChoice) {
-            alert('Please answer Part (b) by selecting Yes or No.');
+          if (studentBoundary === null || !studentDirection) {
+            alert("Please set boundary and arrow direction on the number line in Step 2.");
+            return;
+          }
+
+          if (!studentCheckChoice) {
+            alert("Please select Yes or No in Step 3.");
             return;
           }
 
           isSubmitted = true;
-          disableInputs();
+          disableInputsTypeB();
 
-          const isPartAAlgebraCorrect = (ansSign === currentProblem.finalSign) && (ansVal === currentProblem.boundary);
-          const isPartAGraphCorrect = (studentBoundary === currentProblem.boundary) &&
-                                      (studentClosed === currentProblem.isClosed) &&
-                                      (studentDirection === currentProblem.direction);
-          const isPartBCorrect = (studentPartBChoice === currentProblem.partBAns);
+          const targetBoundaryVal = currentProblem.boundaryVal;
+          const studentBoundaryVal = parsedStudentBoundary.n / parsedStudentBoundary.d;
 
-          const isAllCorrect = isPartAAlgebraCorrect && isPartAGraphCorrect && isPartBCorrect;
+          const isSignCorrect = (ansSign === currentProblem.finalSign);
+          const isValueCorrect = Math.abs(studentBoundaryVal - targetBoundaryVal) < 0.001;
 
-          const userName = document.getElementById('userNameInput').value.trim();
-          let summaryHtml = `<strong>Name:</strong> ${userName || 'N/A'}<br/>`;
-          summaryHtml += `<strong>(a) Algebraic Solution:</strong> x ${ansSign} ${ansVal}<br/>`;
-          summaryHtml += `<strong>(a) Number Line:</strong> Point at ${studentBoundary} (${studentClosed ? 'Closed' : 'Open'} circle), Ray pointing ${studentDirection}<br/>`;
-          summaryHtml += `<strong>(b) Verification Answer:</strong> Is ${currentProblem.partBVal} a solution? ${studentPartBChoice}`;
-          studentAnswerSummary.innerHTML = summaryHtml;
-          studentAnswerSummary.style.display = 'none';
+          const isGraphBoundaryCorrect = Math.abs(studentBoundary - targetBoundaryVal) < 0.15;
+          const isGraphClosedCorrect = (studentClosed === currentProblem.isClosed);
+          const isGraphDirectionCorrect = (studentDirection === currentProblem.direction);
+
+          const isCheckCorrect = (studentCheckChoice === currentProblem.checkAns);
+
+          const isStep1Correct = isSignCorrect && isValueCorrect;
+          const isStep2Correct = isGraphBoundaryCorrect && isGraphClosedCorrect && isGraphDirectionCorrect;
+          const isStep3Correct = isCheckCorrect;
+
+          const isAllCorrect = isStep1Correct && isStep2Correct && isStep3Correct;
+
+          feedbackBox.style.display = 'block';
 
           if (isAllCorrect) {
             feedbackBox.className = 'feedback correct';
-            feedbackBox.innerHTML = 'Correct! Excellent work!';
-            if (window.recordCorrectSubmission) {
-              window.recordCorrectSubmission();
-            }
+            feedbackBox.innerHTML = `Great job! Your algebraic solution, number line graph, and value check are all perfectly correct! 🎉`;
+            if (window.recordCorrectSubmission) window.recordCorrectSubmission();
           } else {
             feedbackBox.className = 'feedback incorrect';
-            let fbHtml = `<div class="feedback-heading">Incorrect</div>`;
+            let html = `<div class="feedback-heading">Incorrect. Here is the step-by-step solution:</div>`;
 
-            fbHtml += `<div class="solution-line-block">`;
-            fbHtml += `<div class="solution-line-title">Step-by-Step Solution:</div>`;
-
-            fbHtml += `<div style="margin-top: 10px; font-weight: bold;">Part (a) Algebraic Solution:</div>`;
-            fbHtml += `<div class="math-working">`;
-            fbHtml += `${currentProblem.stepDetails.orig}<br/>`;
+            let step1Working = `Original:  ${currentProblem.stepDetails.orig}\n`;
             if (currentProblem.stepDetails.simplified) {
-              fbHtml += `${currentProblem.stepDetails.simplified}<br/>`;
+              step1Working += `Simplify:  ${currentProblem.stepDetails.simplified}\n`;
             }
             if (currentProblem.stepDetails.collected) {
-              fbHtml += `${currentProblem.stepDetails.collected}<br/>`;
+              step1Working += `Collect:   ${currentProblem.stepDetails.collected}\n`;
             }
             if (currentProblem.stepDetails.isolated) {
-              fbHtml += `${currentProblem.stepDetails.isolated}<br/>`;
+              step1Working += `Isolate:   ${currentProblem.stepDetails.isolated}\n`;
             }
 
             if (currentProblem.stepDetails.coeff < 0) {
-              fbHtml += `Dividing by negative coefficient (${currentProblem.stepDetails.coeff}) -> <b>REVERSE sign</b><br/>`;
+              step1Working += `Divide by ${currentProblem.stepDetails.coeff} (Negative! Flip sign):\n`;
+            } else {
+              step1Working += `Divide by ${currentProblem.stepDetails.coeff}:\n`;
             }
-            fbHtml += `<b>x ${currentProblem.finalSign} ${currentProblem.boundary}</b>`;
-            fbHtml += `</div>`;
 
-            fbHtml += `<div style="margin-top: 15px; font-weight: bold;">Part (a) Number Line Representation:</div>`;
-            fbHtml += `<div style="margin-bottom: 8px;">`;
-            fbHtml += `Boundary circle at <b>${currentProblem.boundary}</b> (${currentProblem.isClosed ? 'Closed / Solid circle because of ' + currentProblem.finalSign : 'Open circle because of ' + currentProblem.finalSign}).<br/>`;
-            fbHtml += `Ray points to the <b>${currentProblem.direction}</b>.`;
-            fbHtml += `</div>`;
+            if (currentProblem.boundaryFrac.d !== 1) {
+              step1Working += `           x ${currentProblem.finalSign} ${currentProblem.improperBoundaryStr}\n`;
+            }
+            step1Working += `Final:     x ${currentProblem.finalSign} ${currentProblem.boundaryStr}`;
 
-            const correctState = {
-              boundary: currentProblem.boundary,
+            html += `
+              <div class="solution-line-block">
+                <div class="solution-line-title">
+                  Step 1: Algebraic Solution 
+                  ${isStep1Correct ? '<span style="color:#16a34a;">✓ Correct</span>' : '<span style="color:#dc2626;">✗ Incorrect</span>'}
+                </div>
+                <div><b>Your Answer:</b> x ${ansSign} ${ansBoundaryStr}</div>
+                <div><b>Correct Answer:</b> x ${currentProblem.finalSign} ${currentProblem.boundaryStr}</div>
+                <div class="math-working">${step1Working}</div>
+              </div>
+            `;
+
+            const correctGraphState = {
+              boundary: currentProblem.boundaryVal,
+              boundaryFrac: currentProblem.boundaryFrac,
               closed: currentProblem.isClosed,
               direction: currentProblem.direction
             };
-            fbHtml += `<div class="graph-container">${renderNumberLineSVG(currentProblem.minVal, currentProblem.maxVal, correctState, false)}</div>`;
 
-            fbHtml += `<div style="margin-top: 15px; font-weight: bold;">Part (b) Verification:</div>`;
-            fbHtml += `<div class="math-working">`;
-            fbHtml += `Substitute x = ${currentProblem.partBVal} into x ${currentProblem.finalSign} ${currentProblem.boundary}:<br/>`;
-            fbHtml += `${currentProblem.partBVal} ${currentProblem.finalSign} ${currentProblem.boundary} is <b>${currentProblem.partBAns === 'Yes' ? 'TRUE' : 'FALSE'}</b>.<br/>`;
-            fbHtml += `Correct answer: <b>${currentProblem.partBAns}</b>`;
-            fbHtml += `</div>`;
+            const correctSVG = renderNumberLineSVG(currentProblem.minVal, currentProblem.maxVal, correctGraphState, false);
 
-            fbHtml += `</div>`;
-            feedbackBox.innerHTML = fbHtml;
+            html += `
+              <div class="solution-line-block">
+                <div class="solution-line-title">
+                  Step 2: Number Line Graph 
+                  ${isStep2Correct ? '<span style="color:#16a34a;">✓ Correct</span>' : '<span style="color:#dc2626;">✗ Incorrect</span>'}
+                </div>
+                <div><b>Correct Graph Features:</b></div>
+                <ul style="margin: 5px 0 10px 20px; padding: 0; font-size:0.95rem;">
+                  <li>Boundary Point: <b>${currentProblem.boundaryStr}</b></li>
+                  <li>Circle Type: <b>${currentProblem.isClosed ? 'Solid / Closed Circle (≥ or ≤)' : 'Open Circle (> or <)'}</b></li>
+                  <li>Arrow Direction: <b>${currentProblem.direction === 'right' ? 'Points Right (Greater than)' : 'Points Left (Less than)'}</b></li>
+                </ul>
+                <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                  <div style="font-weight: bold; font-size: 0.85rem; color: #475569; margin-bottom: 5px;">Correct Graph Visualization:</div>
+                  ${correctSVG}
+                </div>
+              </div>
+            `;
+
+            html += `
+              <div class="solution-line-block">
+                <div class="solution-line-title">
+                  Step 3: Check Value (x = ${currentProblem.checkStr}) 
+                  ${isStep3Correct ? '<span style="color:#16a34a;">✓ Correct</span>' : '<span style="color:#dc2626;">✗ Incorrect</span>'}
+                </div>
+                <div><b>Your Choice:</b> ${studentCheckChoice} &nbsp;|&nbsp; <b>Correct Answer:</b> ${currentProblem.checkAns}</div>
+                <div style="margin-top:8px; font-size:0.9rem; color:#475569;">
+                  <b>Reasoning:</b> ${currentProblem.checkStr} <b>${currentProblem.checkAns === 'Yes' ? 'is' : 'is NOT'}</b> ${currentProblem.finalSign} ${currentProblem.boundaryStr}.
+                </div>
+              </div>
+            `;
+
+            feedbackBox.innerHTML = html;
           }
+
+          populateStudentSummaryTypeB(ansSign, ansBoundaryStr);
         }
-
-        feedbackBox.style.display = 'block';
-        savePdfBtn.style.display = 'block';
-        syncPrintImage();
-      }
-
-      function disableInputs() {
-        const submitBtn = document.getElementById('submitBtn');
-        if (submitBtn) submitBtn.disabled = true;
-
-        const selects = inputSection.querySelectorAll('select');
-        selects.forEach(s => s.disabled = true);
-
-        const inputs = inputSection.querySelectorAll('input');
-        inputs.forEach(i => i.disabled = true);
-
-        const buttons = inputSection.querySelectorAll('button');
-        buttons.forEach(b => {
-          if (b.id !== 'submitBtn') b.disabled = true;
-        });
 
         undoDrawBtn.disabled = true;
         clearDrawBtn.disabled = true;
         canvas.classList.add('disabled');
+        syncPrintImage();
+
+        savePdfBtn.style.display = 'block';
+      }
+
+      function disableInputsTypeA() {
+        ['ansPart1', 'ansPart2', 'ansPart3', 'ansPart4'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.disabled = true;
+        });
+        const sub = document.getElementById('submitBtn');
+        if (sub) sub.disabled = true;
+      }
+
+      function disableInputsTypeB() {
+        const signEl = document.getElementById('ansSign');
+        const boundEl = document.getElementById('ansBoundary');
+        const sub = document.getElementById('submitBtn');
+        const resetNl = document.getElementById('resetNlBtn');
+        const btnYes = document.getElementById('btnCheckYes');
+        const btnNo = document.getElementById('btnCheckNo');
+
+        if (signEl) signEl.disabled = true;
+        if (boundEl) boundEl.disabled = true;
+        if (sub) sub.disabled = true;
+        if (resetNl) resetNl.disabled = true;
+        if (btnYes) btnYes.disabled = true;
+        if (btnNo) btnNo.disabled = true;
+      }
+
+      function populateStudentSummaryTypeB(ansSign, ansBoundaryStr) {
+        studentAnswerSummary.innerHTML = `
+          <div style="border: 1px solid var(--border); padding: 12px; border-radius: 8px; background: #ffffff;">
+            <div style="color: var(--primary); font-size: 1.05rem; margin-bottom: 6px;">Student's Submitted Responses:</div>
+            <div>• Step 1 Solution: <b>x ${ansSign} ${ansBoundaryStr}</b></div>
+            <div>• Step 2 Graph: Boundary at <b>${studentBoundary !== null ? formatMixedFraction(snapToFractionDen235(studentBoundary)) : 'N/A'}</b>, Circle: <b>${studentClosed ? 'Solid' : 'Open'}</b>, Direction: <b>${studentDirection || 'N/A'}</b></div>
+            <div>• Step 3 Check (x = ${currentProblem.checkStr}): <b>${studentCheckChoice}</b></div>
+          </div>
+        `;
       }
 
       savePdfBtn.addEventListener('click', () => {
-        syncPrintImage();
         window.print();
       });
     });
