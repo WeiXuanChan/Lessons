@@ -814,42 +814,27 @@
         const signs = ['≥', '≤', '>', '<'];
 
         if (type === 'A') {
-          const sign1 = getRandomChoice(signs);
-          const coeff1 = getRandomChoice([-4, -3, -2, 2, 3, 4, 5]);
-          const const1 = getRandomInt(-5, 5);
-
-          let ansSign1 = sign1;
-          if (coeff1 < 0) {
-            ansSign1 = reverseSign(sign1);
-          }
-
-          const sign2 = getRandomChoice(signs);
-          const coeff2 = getRandomChoice([-4, -3, -2, 2, 3, 4, 5]);
-          const const2 = getRandomInt(-5, 5);
-
-          let ansSign2 = sign2;
-          if (coeff2 < 0) {
-            ansSign2 = reverseSign(sign2);
-          }
+          const createPart = (var1, var2) => {
+            const sign = getRandomChoice(signs);
+            const coeff = getRandomChoice([-4, -3, -2, 2, 3, 4, 5]);
+            const constVal = getRandomInt(-5, 5);
+            const correctSign = coeff < 0 ? reverseSign(sign) : sign;
+            return {
+              givenSign: sign,
+              coeff: coeff,
+              constVal: constVal,
+              expr1: formatExpr(coeff, var1, constVal),
+              expr2: formatExpr(coeff, var2, constVal),
+              correctSign: correctSign
+            };
+          };
 
           return {
             type: 'A',
-            part1: {
-              givenSign: sign1,
-              coeff: coeff1,
-              constVal: const1,
-              exprA: formatExpr(coeff1, 'a', const1),
-              exprB: formatExpr(coeff1, 'b', const1),
-              correctSign: ansSign1
-            },
-            part2: {
-              givenSign: sign2,
-              coeff: coeff2,
-              constVal: const2,
-              exprX: formatExpr(coeff2, 'x', const2),
-              exprY: formatExpr(coeff2, 'y', const2),
-              correctSign: ansSign2
-            }
+            part1: createPart('a','b'),
+            part2: createPart('x', 'y'),
+            part3: createPart('p', 'q'),
+            part4: createPart('m', 'n')
           };
         } else {
           const inequalitySign = getRandomChoice(signs);
@@ -1072,7 +1057,7 @@
                 If <b>a ${currentProblem.part1.givenSign} b</b>, then:
               </div>
               <div class="input-row">
-                <span class="input-label">${currentProblem.part1.exprA}</span>
+                <span class="input-label">${currentProblem.part1.expr1}</span>
                 <select id="ansPart1">
                   <option value="">Select</option>
                   <option value="≥">≥</option>
@@ -1080,7 +1065,7 @@
                   <option value=">">&gt;</option>
                   <option value="<">&lt;</option>
                 </select>
-                <span class="input-label">${currentProblem.part1.exprB}</span>
+                <span class="input-label">${currentProblem.part1.expr2}</span>
               </div>
             </div>
 
@@ -1090,7 +1075,7 @@
                 If <b>x ${currentProblem.part2.givenSign} y</b>, then:
               </div>
               <div class="input-row">
-                <span class="input-label">${currentProblem.part2.exprX}</span>
+                <span class="input-label">${currentProblem.part2.expr1}</span>
                 <select id="ansPart2">
                   <option value="">Select</option>
                   <option value="≥">≥</option>
@@ -1098,9 +1083,46 @@
                   <option value=">">&gt;</option>
                   <option value="<">&lt;</option>
                 </select>
-                <span class="input-label">${currentProblem.part2.exprY}</span>
+                <span class="input-label">${currentProblem.part2.expr2}</span>
               </div>
             </div>
+
+            <div class="part-block">
+              <div class="part-title">(c) Relationship between p and q</div>
+              <div style="font-size: 1.05rem; margin-bottom: 12px; font-weight: 500;">
+                If <b>p ${currentProblem.part3.givenSign} q</b>, then:
+              </div>
+              <div class="input-row">
+                <span class="input-label">${currentProblem.part3.expr1}</span>
+                <select id="ansPart3">
+                  <option value="">Select</option>
+                  <option value="≥">≥</option>
+                  <option value="≤">≤</option>
+                  <option value=">">&gt;</option>
+                  <option value="<">&lt;</option>
+                </select>
+                <span class="input-label">${currentProblem.part3.expr2}</span>
+              </div>
+            </div>
+
+            <div class="part-block">
+              <div class="part-title">(d) Relationship between m and n</div>
+              <div style="font-size: 1.05rem; margin-bottom: 12px; font-weight: 500;">
+                If <b>m ${currentProblem.part4.givenSign} n</b>, then:
+              </div>
+              <div class="input-row">
+                <span class="input-label">${currentProblem.part4.expr1}</span>
+                <select id="ansPart4">
+                  <option value="">Select</option>
+                  <option value="≥">≥</option>
+                  <option value="≤">≤</option>
+                  <option value=">">&gt;</option>
+                  <option value="<">&lt;</option>
+                </select>
+                <span class="input-label">${currentProblem.part4.expr2}</span>
+              </div>
+            </div>
+
 
             <button id="submitBtn">Submit Answer</button>
           `;
@@ -1190,9 +1212,11 @@
         if (currentProblem.type === 'A') {
           const ans1 = document.getElementById('ansPart1').value;
           const ans2 = document.getElementById('ansPart2').value;
+          const ans3 = document.getElementById('ansPart3').value;
+          const ans4 = document.getElementById('ansPart4').value;
 
-          if (!ans1 || !ans2) {
-            alert('Please select an inequality sign for both parts.');
+          if (!ans1 || !ans2 || !ans3 || !ans4) {
+            alert('Please select an inequality sign for all parts.');
             return;
           }
 
@@ -1201,12 +1225,16 @@
 
           const isPart1Correct = (ans1 === currentProblem.part1.correctSign);
           const isPart2Correct = (ans2 === currentProblem.part2.correctSign);
-          const isAllCorrect = isPart1Correct && isPart2Correct;
+          const isPart3Correct = (ans3 === currentProblem.part3.correctSign);
+          const isPart4Correct = (ans4 === currentProblem.part4.correctSign);
+          const isAllCorrect = isPart1Correct && isPart2Correct && isPart3Correct && isPart4Correct;
 
           const userName = document.getElementById('userNameInput').value.trim();
           let summaryHtml = `<strong>Name:</strong> ${userName || 'N/A'}<br/>`;
-          summaryHtml += `<strong>(a) Your answer:</strong> ${currentProblem.part1.exprA} ${ans1} ${currentProblem.part1.exprB}<br/>`;
-          summaryHtml += `<strong>(b) Your answer:</strong> ${currentProblem.part2.exprX} ${ans2} ${currentProblem.part2.exprY}`;
+          summaryHtml += `<strong>(a) Your answer:</strong> ${currentProblem.part1.expr1} ${ans1} ${currentProblem.part1.expr2}<br/>`;
+          summaryHtml += `<strong>(b) Your answer:</strong> ${currentProblem.part2.expr1} ${ans2} ${currentProblem.part2.expr2}`;
+          summaryHtml += `<strong>(a) Your answer:</strong> ${currentProblem.part3.expr1} ${ans3} ${currentProblem.part3.expr2}<br/>`;
+          summaryHtml += `<strong>(b) Your answer:</strong> ${currentProblem.part4.expr1} ${ans4} ${currentProblem.part4.expr2}`;
           studentAnswerSummary.innerHTML = summaryHtml;
           studentAnswerSummary.style.display = 'none';
 
@@ -1220,35 +1248,28 @@
             feedbackBox.className = 'feedback incorrect';
             let fbHtml = `<div class="feedback-heading">Incorrect</div>`;
 
-            fbHtml += `<div class="solution-line-block">`;
-            fbHtml += `<div class="solution-line-title">Step-by-Step Solution:</div>`;
+            fbHtml += `<div class="solution-line-block"><div class="solution-line-title">Step-by-Step Solution:</div>`;
 
-            fbHtml += `<div style="margin-top: 10px; font-weight: bold;">Part (a):</div>`;
-            fbHtml += `<div class="math-working">`;
-            fbHtml += `Given: a ${currentProblem.part1.givenSign} b<br/>`;
-            if (currentProblem.part1.coeff < 0) {
-              fbHtml += `Multiplying or dividing by a negative number (${currentProblem.part1.coeff}) REVERSES the inequality sign.<br/>`;
-              fbHtml += `Sign changes from '${currentProblem.part1.givenSign}' to '${currentProblem.part1.correctSign}'.<br/>`;
-            } else {
-              fbHtml += `Multiplying or dividing by a positive number (${currentProblem.part1.coeff}) KEEPS the inequality sign unchanged.<br/>`;
-            }
-            fbHtml += `Correct Result: <b>${currentProblem.part1.exprA} ${currentProblem.part1.correctSign} ${currentProblem.part1.exprB}</b>`;
-            fbHtml += `</div>`;
+              const renderFeedbackPart = (label, var1, var2, part) => {
+                let html = `<div style="margin-top: 10px; font-weight: bold;">Part (${label}):</div><div class="math-working">`;
+                html += `Given: ${var1} ${part.givenSign} ${var2}<br/>`;
+                if (part.coeff < 0) {
+                  html += `Multiplying or dividing by a negative number (${part.coeff}) REVERSES the inequality sign.<br/>`;
+                  html += `Sign changes from '${part.givenSign}' to '${part.correctSign}'.<br/>`;
+                } else {
+                  html += `Multiplying or dividing by a positive number (${part.coeff}) KEEPS the inequality sign unchanged.<br/>`;
+                }
+                html += `Correct Result: <b>${part.expr1} ${part.correctSign} ${part.expr2}</b></div>`;
+                return html;
+              };
 
-            fbHtml += `<div style="margin-top: 15px; font-weight: bold;">Part (b):</div>`;
-            fbHtml += `<div class="math-working">`;
-            fbHtml += `Given: x ${currentProblem.part2.givenSign} y<br/>`;
-            if (currentProblem.part2.coeff < 0) {
-              fbHtml += `Multiplying or dividing by a negative number (${currentProblem.part2.coeff}) REVERSES the inequality sign.<br/>`;
-              fbHtml += `Sign changes from '${currentProblem.part2.givenSign}' to '${currentProblem.part2.correctSign}'.<br/>`;
-            } else {
-              fbHtml += `Multiplying or dividing by a positive number (${currentProblem.part2.coeff}) KEEPS the inequality sign unchanged.<br/>`;
-            }
-            fbHtml += `Correct Result: <b>${currentProblem.part2.exprX} ${currentProblem.part2.correctSign} ${currentProblem.part2.exprY}</b>`;
-            fbHtml += `</div>`;
+              fbHtml += renderFeedbackPart('a', 'a', 'b', currentProblem.part1);
+              fbHtml += renderFeedbackPart('b', 'x', 'y', currentProblem.part2);
+              fbHtml += renderFeedbackPart('c', 'p', 'q', currentProblem.part3);
+              fbHtml += renderFeedbackPart('d', 'm', 'n', currentProblem.part4);
 
-            fbHtml += `</div>`;
-            feedbackBox.innerHTML = fbHtml;
+              fbHtml += `</div>`;
+              feedbackBox.innerHTML = fbHtml;
           }
 
         } else {
