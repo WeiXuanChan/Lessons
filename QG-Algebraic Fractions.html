@@ -762,10 +762,33 @@
         return term1 + term2;
       }
 
+      // Variable Product Engine: correctly multiplies variable strings (e.g., 'x²' * 'x' -> 'x³')
+      function combineVarStrings(v1, v2) {
+        let counts = { x: 0, y: 0 };
+        
+        [v1, v2].forEach(v => {
+          if (!v) return;
+          if (v.includes('x²')) counts.x += 2;
+          else if (v.includes('x')) counts.x += 1;
+          
+          if (v.includes('y²')) counts.y += 2;
+          else if (v.includes('y')) counts.y += 1;
+        });
+
+        let result = '';
+        ['x', 'y'].forEach(v => {
+          if (counts[v] === 1) result += v;
+          else if (counts[v] === 2) result += `${v}²`;
+          else if (counts[v] === 3) result += `${v}³`;
+          else if (counts[v] > 3) result += `${v}^${counts[v]}`;
+        });
+
+        return result;
+      }
+
       // Dynamic expansion engine for (a*v1 + b)*(c*v2 + d)
       function expandTwoVarExpr(a, b, v1, c, d, v2) {
         if (v1 === v2) {
-          // Single variable expansion: e.g. (ax + b)(cx + d) = ac*x² + (ad+bc)*x + bd
           let quadCoeff = a * c;
           let linCoeff = a * d + b * c;
           let constCoeff = b * d;
@@ -779,7 +802,6 @@
           }
           return (t1 + (t2 ? ' ' + t2 : '') + t3).trim();
         } else {
-          // Bivariate expansion: (ax + b)(cy + d) = ac*xy + ad*x + bc*y + bd
           let xyCoeff = a * c;
           let xCoeff = a * d;
           let yCoeff = b * c;
@@ -833,18 +855,70 @@
         let isDivision = Math.random() < 0.5;
         let opSymbol = isDivision ? '÷' : '×';
 
+        // Revised Multiplier Logic
+        let multType = getRandomInt(1, 6);
+        let multCoeff = getRandomNonZeroInt(1, 4);
+        let multConst = 0;
         let multVar = denVar;
-        let multCoeff = getRandomNonZeroInt(1, 3);
-        let multConst = getRandomNonZeroInt(-4, 4);
-        let multTermStr = formatLinearExpr(multCoeff, multVar, multConst);
+        let multTermStr = "";
+        let multVarRaw = "";
 
-        // Compute rigorous expansions
-        let expandedF1Num = expandTwoVarExpr(numCoeff, numConst, numVar, multCoeff, multConst, multVar);
-        let expandedF1Den = expandTwoVarExpr(cCoeff, cConst, cVar, multCoeff, multConst, multVar);
+        switch(multType) {
+          case 1: // ax
+            multVarRaw = 'x';
+            multTermStr = formatLinearTerm(multCoeff, multVarRaw);
+            break;
+          case 2: // ay
+            multVarRaw = 'y';
+            multTermStr = formatLinearTerm(multCoeff, multVarRaw);
+            break;
+          case 3: // ax²
+            multVarRaw = 'x²';
+            multTermStr = formatLinearTerm(multCoeff, multVarRaw);
+            break;
+          case 4: // ay²
+            multVarRaw = 'y²';
+            multTermStr = formatLinearTerm(multCoeff, multVarRaw);
+            break;
+          case 5: // axy
+            multVarRaw = 'xy';
+            multTermStr = formatLinearTerm(multCoeff, multVarRaw);
+            break;
+          case 6: // ax + b or ay + b
+          default:
+            multVar = Math.random() < 0.5 ? 'x' : 'y';
+            multConst = getRandomNonZeroInt(-4, 4);
+            multTermStr = formatLinearExpr(multCoeff, multVar, multConst);
+            break;
+        }
+
+        // Compute rigorous expansions based on multiplier structure
+        let expandedF1Num = "";
+        let expandedF1Den = "";
+
+        if (multType >= 1 && multType <= 5) {
+          function multiplyTermByLinear(mVar, mCoeff, lCoeff, lVar, lConst) {
+            let combinedVar1 = combineVarStrings(mVar, lVar);
+            let part1 = formatLinearTerm(lCoeff * mCoeff, combinedVar1, false);
+            let part2 = '';
+            if (lConst !== 0) {
+              part2 = formatLinearTerm(lConst * mCoeff, mVar, (lConst * mCoeff) > 0);
+            }
+            return (part1 + (part2 ? ' ' + part2 : '')).trim();
+          }
+
+          expandedF1Num = multiplyTermByLinear(multVarRaw, multCoeff, numCoeff, numVar, numConst);
+          expandedF1Den = multiplyTermByLinear(multVarRaw, multCoeff, cCoeff, cVar, cConst);
+        } else {
+          expandedF1Num = expandTwoVarExpr(numCoeff, numConst, numVar, multCoeff, multConst, multVar);
+          expandedF1Den = expandTwoVarExpr(cCoeff, cConst, cVar, multCoeff, multConst, multVar);
+        }
 
         let qF1Num, qF1Den, qF2Num, qF2Den;
         let step1F1Num, step1F1Den, step1F2Num, step1F2Den;
         let step2Num, step2Den;
+
+        let formattedMultWrap = (multType >= 1 && multType <= 5) ? multTermStr : `(${multTermStr})`;
 
         if (!isDivision) {
           qF1Num = expandedF1Num;
@@ -877,7 +951,7 @@
           step1F1Num, step1F1Den, step1F2Num, step1F2Den,
           step2Num, step2Den,
           ansNumStr, ansDenStr,
-          factorExpr, multTermStr,
+          factorExpr, multTermStr: formattedMultWrap,
           expandedF1Num, expandedF1Den
         };
       }
@@ -993,12 +1067,12 @@
           fbHtml += `</div>`;
 
           // Step 3
-          let numFactoringNotice = `Notice that ${currentProblem.expandedF1Num} = (${currentProblem.ansNumStr})(${currentProblem.multTermStr})`;
-          let denFactoringNotice = `Notice that ${currentProblem.expandedF1Den} = (${currentProblem.factorExpr})(${currentProblem.multTermStr})`;
+          let numFactoringNotice = `Notice that ${currentProblem.expandedF1Num} = (${currentProblem.ansNumStr})${currentProblem.multTermStr}`;
+          let denFactoringNotice = `Notice that ${currentProblem.expandedF1Den} = (${currentProblem.factorExpr})${currentProblem.multTermStr}`;
 
           let step3Frac = buildStackedFrac(
-            `(${currentProblem.ansNumStr})(${currentProblem.multTermStr})(${currentProblem.factorExpr})`,
-            `(${currentProblem.ansDenStr})(${currentProblem.multTermStr})(${currentProblem.factorExpr})`
+            `(${currentProblem.ansNumStr})${currentProblem.multTermStr}(${currentProblem.factorExpr})`,
+            `(${currentProblem.ansDenStr})${currentProblem.multTermStr}(${currentProblem.factorExpr})`
           );
           fbHtml += `<div class="step-block">`;
           fbHtml += `<div class="step-title">Step 3: Factorise quadratic/bivariate expressions into linear factors</div>`;
@@ -1012,7 +1086,7 @@
           // Step 4
           let finalFrac = buildStackedFrac(`<strong>${currentProblem.ansNumStr}</strong>`, `<strong>${currentProblem.ansDenStr}</strong>`);
           fbHtml += `<div class="step-block">`;
-          fbHtml += `<div class="step-title">Step 4: Cancel common terms [(${currentProblem.multTermStr}) and (${currentProblem.factorExpr})]</div>`;
+          fbHtml += `<div class="step-title">Step 4: Cancel common terms [${currentProblem.multTermStr} and (${currentProblem.factorExpr})]</div>`;
           fbHtml += `<div class="frac-line">= ${finalFrac}</div>`;
           fbHtml += `</div>`;
 
