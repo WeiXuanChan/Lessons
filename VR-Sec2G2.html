@@ -85,7 +85,9 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-
+    // Get the query string part of the URL (everything after and including "?")
+    const queryString = window.location.search;
+    
     const firebaseConfig = {
       apiKey: "AIzaSyAd0olTVny--vwE9UVzh5YRDE7lzha6y08",
       authDomain: "qg-summary.firebaseapp.com",
@@ -133,7 +135,7 @@ const BAD_WORDS = await fetchBadWords();
       const chartWrapper = document.getElementById('chartWrapper');
 
       try {
-        const querySnapshot = await getDocs(collection(db, "counter"));
+        const querySnapshot = await getDocs(collection(db, "counter"+queryString));
 
         if (querySnapshot.empty) {
           statusEl.textContent = "No data found in the 'counter' collection.";
