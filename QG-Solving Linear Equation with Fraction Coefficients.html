@@ -514,7 +514,9 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
     import { getFirestore, collection, addDoc, doc, setDoc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-
+    // Get the query string part of the URL (everything after and including "?")
+    const queryString = window.location.search;
+    
     const firebaseConfig = {
       apiKey: "AIzaSyAd0olTVny--vwE9UVzh5YRDE7lzha6y08",
       authDomain: "qg-summary.firebaseapp.com",
@@ -542,7 +544,7 @@
         });
 
         // 2. Update/create counter document for the user
-        const counterRef = doc(db, "counter", name);
+        const counterRef = doc(db, "counter"+queryString, name);
         await setDoc(counterRef, {
           name: name,
           Chap1_2: increment(1),
