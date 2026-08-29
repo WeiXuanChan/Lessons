@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Learning Portal</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --accent-color: #FF6B6B;
+            --bg-color: #F4F7F6;
+            --card-bg: #FFFFFF;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .featured-card {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            text-align: center;
+        }
+
+        .featured-card a {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-decoration: none;
+            display: block;
+        }
+
+        .link-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .nav-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .nav-card a {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Secondary 2 Mathematics</h1>
+        <p>Select a chapter below to start learning</p>
+    </header>
+
+    <div class="featured-card">
+        <a class="dynamic-link" href="https://weixuanchan.github.io/Lessons/VR-Sec2G2.html" target="_blank" rel="noopener noreferrer">
+            🏆 View Scoreboard
+        </a>
+    </div>
+
+    <div class="link-grid">
+        <div class="nav-card">
+            <a class="dynamic-link" href="https://weixuanchan.github.io/Lessons/QG-Gradient%20of%20Linear%20Graphs.html" target="_blank" rel="noopener noreferrer">Chapter 1.2: Gradient of Linear Graphs</a>
+        </div>
+        <div class="nav-card">
+            <a class="dynamic-link" href="https://weixuanchan.github.io/Lessons/QG-Linear%20Graphs.html" target="_blank" rel="noopener noreferrer">Chapter 1.4: Linear Graphs</a>
+        </div>
+        <div class="nav-card">
+            <a class="dynamic-link" href="https://weixuanchan.github.io/Lessons/QG-Gradient%20of.html" target="_blank" rel="noopener noreferrer">Chapter 2.1: Gradient</a>
+        </div>
+        <div class="nav-card">
+            <a class="dynamic-link" href="https://weixuanchan.github.io/Lessons/QG-of%20Linear.html" target="_blank" rel="noopener noreferrer">Chapter 3.4: Linear Equations</a>
+        </div>
+        <div class="nav-card">
+            <a class="dynamic-link" href="https://weixuanchan.github.io/Lessons/QG-Algebraic%20Fractions.html" target="_blank" rel="noopener noreferrer">Chapter 5: Algebraic Fractions</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Retrieve any query parameters attached to the current page URL
+        const queryString = window.location.search;
+
+        // If a query string exists, append it to all targeted links
+        if (queryString) {
+            const dynamicLinks = document.querySelectorAll(".dynamic-link");
+            dynamicLinks.forEach(link => {
+                link.href = link.href + queryString;
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
