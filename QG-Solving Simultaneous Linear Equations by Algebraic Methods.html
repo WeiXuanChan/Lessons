@@ -512,7 +512,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
-    import { getFirestore, collection, addDoc, doc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, setDoc, increment, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
     // Get the query string part of the URL (everything after and including "?")
     const queryString = window.location.search;
     
@@ -541,10 +541,13 @@
       const name = userNameInput.value.trim() || 'Anonymous';
 
       try {
+        const expireDate = new Date();
+        expireDate.setMonth(expireDate.getMonth() + 3);
         await addDoc(collection(db, "submissions"), {
           name: name,
           timestamp: serverTimestamp(),
-          Chapter: 'Chap3.4'
+          Chapter: 'Chap3.4',
+          expireAt: Timestamp.fromDate(expireDate) //TTL
         });
 
         const counterRef = doc(db, "counter"+queryString, name);
