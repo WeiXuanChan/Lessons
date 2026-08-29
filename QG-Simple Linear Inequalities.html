@@ -596,7 +596,7 @@
           name: name,
           timestamp: serverTimestamp(),
           Chapter: 'Chap1.4',
-          expireAt: Timestamp.framDate(expireDate) //TTL
+          expireAt: Timestamp.fromDate(expireDate) //TTL
         });
 
         const counterRef = doc(db, "counter"+queryString, name);
