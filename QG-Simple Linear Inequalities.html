@@ -561,7 +561,6 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
-    import { initializeAppCheck, ReCaptchaV3Provider, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app-check.js";
     import { getFirestore, collection, addDoc, doc, setDoc, increment, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
     // Get the query string part of the URL (everything after and including "?")
     const queryString = window.location.search;
@@ -579,18 +578,6 @@
     let db;
     try {
       const app = initializeApp(firebaseConfig);
-      // Enable Debug Token for local development (localhost)
-      // if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-      //   self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-      // }
-
-      // Initialize App Check
-      const appCheck = initializeAppCheck(app, {
-        // Use ReCaptchaEnterpriseProvider if using reCAPTCHA Enterprise, or ReCaptchaV3Provider for standard v3
-        provider: new ReCaptchaV3Provider("6LfDi58tAAAAAOEr4p6U2i7uabWXJVkPEivJ7PNy"),
-        isTokenAutoRefreshEnabled: true // Refreshes tokens automatically in the background
-      });
-      
       getAnalytics(app);
       db = getFirestore(app);
     } catch(e) {
