@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counter Analytics Dashboard</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --primary: #4f46e5;
+      --text: #1e293b;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 1000px;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+    }
+
+    .controls-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+
+    .controls-container label {
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .controls-container select {
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background-color: #fff;
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .controls-container select:focus {
+      border-color: var(--primary);
+    }
+
+    .chart-box {
+      position: relative;
+      width: 100%;
+      height: 500px;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-weight: bold;
+      color: #64748b;
+      padding: 40px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Scoreboard</h1>
+    <div class="subtitle" id="subtitle">Vertical Stacked Bar Graph by Student</div>
+    
+    <div class="controls-container">
+      <label for="chartTypeSelect">Chart View:</label>
+      <select id="chartTypeSelect">
+        <option value="stacked" selected>Stacked Bar Chart</option>
+        <option value="grouped">Grouped (Clustered) Bar Chart</option>
+        <option value="min">Minimum Value of Subcategories</option>
+      </select>
+    </div>
+
+    <div id="status" class="status-msg">Loading Firebase data...</div>
+
+    <div class="chart-box" id="chartWrapper" style="display: none;">
+      <canvas id="counterChart"></canvas>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+    const queryString = window.location.search;
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyAd0olTVny--vwE9UVzh5YRDE7lzha6y08",
+      authDomain: "qg-summary.firebaseapp.com",
+      projectId: "qg-summary",
+      storageBucket: "qg-summary.firebasestorage.app",
+      messagingSenderId: "660515596494",
+      appId: "1:660515596494:web:11d5aacc8c3937f452089f",
+      measurementId: "G-5T9WWML4EK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    async function fetchBadWords() {
+      try {
+        const response = await fetch("https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/en");
+        const text = await response.text();
+        return text.split('\n').map(word => word.trim()).filter(Boolean);
+      } catch (err) {
+        console.error("Failed to load:", err);
+        return [];
+      }
+    }
+
+    const BAD_WORDS = await fetchBadWords();
+
+    function hasProfanity(text) {
+      if (!text) return false;
+      const lowerText = text.toLowerCase();
+      return BAD_WORDS.some(word => lowerText.includes(word));
+    }
+
+    const colorPalette = [
+      '#4f46e5', '#0284c7', '#16a34a', '#d97706', 
+      '#dc2626', '#8b5cf6', '#ec4899', '#14b8a6'
+    ];
+
+    let chartInstance = null;
+    let cachedDocumentIds = [];
+    let cachedFieldList = [];
+    let cachedMergedData = {};
+
+    function renderChart(viewType, documentIds, fieldList, mergedData) {
+      const ctx = document.getElementById('counterChart').getContext('2d');
+      const subtitleEl = document.getElementById('subtitle');
+
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      let datasets = [];
+      let isStacked = false;
+
+      if (viewType === 'stacked') {
+        subtitleEl.textContent = "Vertical Stacked Bar Graph by Student";
+        isStacked = true;
+        datasets = fieldList.map((field, index) => ({
+          label: field,
+          data: documentIds.map(id => mergedData[id][field] || 0),
+          backgroundColor: colorPalette[index % colorPalette.length],
+          borderRadius: 4
+        }));
+      } else if (viewType === 'grouped') {
+        subtitleEl.textContent = "Grouped (Clustered) Bar Chart by Student";
+        isStacked = false;
+        datasets = fieldList.map((field, index) => ({
+          label: field,
+          data: documentIds.map(id => mergedData[id][field] || 0),
+          backgroundColor: colorPalette[index % colorPalette.length],
+          borderRadius: 4
+        }));
+      } else if (viewType === 'min') {
+        subtitleEl.textContent = "Minimum Score Across All Detected Subcategories";
+        isStacked = false;
+        
+        const minValues = documentIds.map(id => {
+          const studentScores = fieldList.map(field => mergedData[id][field] || 0);
+          return Math.min(...studentScores);
+        });
+
+        datasets = [{
+          label: 'Minimum Subcategory Score',
+          data: minValues,
+          backgroundColor: colorPalette[0],
+          borderRadius: 4
+        }];
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: documentIds,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            tooltip: {
+              mode: viewType === 'min' ? 'nearest' : 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            x: {
+              stacked: isStacked,
+              title: {
+                display: true,
+                text: 'Student'
+              }
+            },
+            y: {
+              stacked: isStacked,
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: viewType === 'min' ? 'Minimum Questions Answered' : 'Question Answered Correctly'
+              },
+              ticks: {
+                stepSize: 1
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Set up chart view selector event listener once
+    const chartSelect = document.getElementById('chartTypeSelect');
+    chartSelect.addEventListener('change', (e) => {
+      if (cachedDocumentIds.length > 0) {
+        renderChart(e.target.value, cachedDocumentIds, cachedFieldList, cachedMergedData);
+      }
+    });
+
+    function listenToCounterData() {
+      const statusEl = document.getElementById('status');
+      const chartWrapper = document.getElementById('chartWrapper');
+
+      // Replaced getDocs with Firestore's real-time listener onSnapshot
+      onSnapshot(collection(db, "counter" + queryString), (querySnapshot) => {
+        if (querySnapshot.empty) {
+          statusEl.style.display = 'block';
+          chartWrapper.style.display = 'none';
+          statusEl.textContent = "No data found in the 'counter' collection.";
+          return;
+        }
+
+        const numericFields = new Set();
+        const mergedData = {};
+
+        querySnapshot.forEach((docSnap) => {
+          let docId = docSnap.id;
+          const data = docSnap.data();
+
+          if (hasProfanity(docId)) {
+            docId = "Anonymous";
+          }
+
+          if (!mergedData[docId]) {
+            mergedData[docId] = {};
+          }
+
+          Object.keys(data).forEach((field) => {
+            if (field !== "countTotal" && Number.isInteger(data[field])) {
+              numericFields.add(field);
+              mergedData[docId][field] = (mergedData[docId][field] || 0) + data[field];
+            }
+          });
+        });
+
+        const documentIds = Object.keys(mergedData);
+        const fieldList = Array.from(numericFields);
+
+        if (fieldList.length === 0 || documentIds.length === 0) {
+          statusEl.style.display = 'block';
+          chartWrapper.style.display = 'none';
+          statusEl.textContent = "No valid integer fields found to plot.";
+          return;
+        }
+
+        // Save current data state in cache variables
+        cachedDocumentIds = documentIds;
+        cachedFieldList = fieldList;
+        cachedMergedData = mergedData;
+
+        statusEl.style.display = 'none';
+        chartWrapper.style.display = 'block';
+
+        // Re-render chart whenever updates are pushed from Firestore
+        renderChart(chartSelect.value, documentIds, fieldList, mergedData);
+
+      }, (error) => {
+        console.error("Error listening to Firestore data:", error);
+        statusEl.style.display = 'block';
+        statusEl.textContent = "Error loading database contents: " + error.message;
+      });
+    }
+
+    listenToCounterData();
+  </script>
+</body>
+</html>
