@@ -188,13 +188,14 @@
     }
 
     .equation-display {
-      font-size: 1.3rem;
-      font-weight: bold;
-      line-height: 1.8;
+      font-size: 1rem;
+      font-weight: normal;
+      line-height: 1.6;
       background: #f1f5f9;
       padding: 15px 20px;
       border-radius: 6px;
-      text-align: center;
+      text-align: left;
+      white-space: pre-line;
       overflow-x: auto;
     }
 
@@ -618,17 +619,21 @@
           variables: ["A", "r"],
           notes: [
             "A represents the Area of the circle.",
-            "r is the radius of the circle.",
+            "r is the radius of the circle."
+          ],
+          keynotes: [
             "Square the radius before multiplying by π."
           ]
         },
         {
-          topic: "Circumference of a circle",
+          topic: "Circumference of a circle (use radius)",
           equation: "C = 2πr",
           variables: ["C", "r"],
           notes: [
             "C represents the Circumference (perimeter of the circle).",
-            "r is the radius.",
+            "r is the radius."
+          ],
+          keynotes: [
             "Alternatively, C = πd where d is diameter."
           ]
         },
@@ -640,16 +645,19 @@
             "A is the area of the triangle.",
             "b is the base length.",
             "h is the perpendicular height to the base."
-          ]
+          ],
+          keynotes: [""]
         },
         {
           topic: "Pythagoras’ theorem",
           equation: "a² + b² = c²",
           variables: ["a", "b", "c"],
           notes: [
-            "Applies strictly to right-angled triangles.",
             "c represents the hypotenuse (longest side).",
             "a and b are the two shorter legs."
+          ],
+          keynotes: [
+            "Applies strictly to right-angled triangles."
           ]
         },
         {
@@ -660,7 +668,8 @@
             "A represents area.",
             "l is the length of the rectangle.",
             "w is the width of the rectangle."
-          ]
+          ],
+          keynotes: [""]
         },
         {
           topic: "Area of trapezium",
@@ -668,7 +677,9 @@
           variables: ["A", "a", "b", "h"],
           notes: [
             "a and b are the parallel sides.",
-            "h is the perpendicular height between the parallel sides.",
+            "h is the perpendicular height between the parallel sides."
+          ],
+          keynotes: [
             "Sum the parallel sides first before multiplying by ½ and h."
           ]
         },
@@ -680,7 +691,8 @@
             "V represents total volume.",
             "Base area is the area of the uniform cross-section.",
             "h is the height/length along the prism."
-          ]
+          ],
+          keynotes: [""]
         },
         {
           topic: "Volume of pyramid",
@@ -690,7 +702,8 @@
             "V represents total volume.",
             "Base area depends on the shape of the polygon base.",
             "h is the perpendicular height from base to apex."
-          ]
+          ],
+          keynotes: [""]
         },
         {
           topic: "Surface area of sphere",
@@ -699,7 +712,8 @@
           notes: [
             "A represents total surface area.",
             "r is the radius of the sphere."
-          ]
+          ],
+          keynotes: [""]
         },
         {
           topic: "Volume of sphere",
@@ -708,6 +722,9 @@
           notes: [
             "V represents total volume.",
             "r is the radius.",
+            "Cube the radius (r³) when calculating sphere volume."
+          ],
+          keynotes: [
             "Cube the radius (r³) when calculating sphere volume."
           ]
         },
@@ -719,7 +736,8 @@
             "A represents curved (lateral) surface area.",
             "r is the base radius.",
             "l is the slant height of the cone."
-          ]
+          ],
+          keynotes: [""]
         },
         {
           topic: "Direct proportion",
@@ -728,7 +746,8 @@
           notes: [
             "y varies directly as x.",
             "k is the constant of proportionality (k ≠ 0)."
-          ]
+          ],
+          keynotes: [""]
         },
         {
           topic: "Inverse proportion",
@@ -737,7 +756,8 @@
           notes: [
             "y varies inversely as x.",
             "k is the constant of proportionality."
-          ]
+          ],
+          keynotes: [""]
         },
         {
           topic: "Linear equation",
@@ -746,14 +766,17 @@
           notes: [
             "m represents the gradient (slope).",
             "c represents the y-intercept."
-          ]
+          ],
+          keynotes: [""]
         },
         {
           topic: "Gradient formula",
           equation: "m = (y₂ - y₁)/(x₂ - x₁)",
           variables: ["m", "x₁", "y₁", "x₂", "y₂"],
           notes: [
-            "Calculates slope using two points (x₁, y₁) and (x₂, y₂).",
+            "Calculates slope using two points (x₁, y₁) and (x₂, y₂)."            
+          ],
+          keynotes: [
             "Change in y divided by change in x."
           ]
         },
@@ -761,7 +784,8 @@
           topic: "Factorize: a² + 2ab + b²",
           equation: " (a+b)²",
           variables: ["a", "b"],
-          notes: [
+          notes: [""],
+          keynotes: [
             "Expands to a² + 2ab + b².",
             "Factorises cleanly to (a+b)²."
           ]
@@ -770,7 +794,8 @@
           topic: "Factorize: a² - 2ab + b²",
           equation: " (a-b)²",
           variables: ["a", "b"],
-          notes: [
+          notes: [""],
+          keynotes: [
             "Expands to a² - 2ab + b².",
             "Factorises cleanly to (a-b)²."
           ]
@@ -779,7 +804,8 @@
           topic: "Factorize: a² - b²",
           equation: "(a+b)(a-b)",
           variables: ["a", "b"],
-          notes: [
+          notes: [""],
+          keynotes: [
             "Applies when subtracting two square terms.",
             "Splits into sum and difference factors."
           ]
@@ -789,7 +815,9 @@
           equation: "(n-2) × 180°",
           variables: ["n"],
           notes: [
-            "n is the number of sides of the polygon.",
+            "n is the number of sides of the polygon."
+          ],
+          keynotes: [
             "Calculates total internal angle sum in degrees."
           ]
         },
@@ -797,7 +825,8 @@
           topic: "Sum of exterior angles",
           equation: "360°",
           variables: [],
-          notes: [
+          notes: [""],
+          keynotes: [
             "The sum of exterior angles for any convex polygon is always 360°."
           ]
         }
@@ -1012,7 +1041,7 @@
         currentProblem = EQUATION_BANK[randomIndex];
 
         questionPrompt.textContent = `Recall the formula for: ${currentProblem.topic}`;
-        equationDisplay.textContent = `___________`;
+        equationDisplay.textContent = currentProblem.notes.map(note => `• ${note}`).join('\n');
 
         renderDynamicVariableButtons(currentProblem.variables);
 
@@ -1071,7 +1100,7 @@
           fbHtml += `<div class="step-block" style="margin-top: 15px;">`;
           fbHtml += `<div class="step-title">Key Notes & Variables:</div>`;
           fbHtml += `<ul style="margin: 5px 0 0 20px; padding: 0; color: #334155;">`;
-          currentProblem.notes.forEach(note => {
+          currentProblem.keynotes.forEach(note => {
             fbHtml += `<li style="margin-bottom: 4px;">${note}</li>`;
           });
           fbHtml += `</ul></div>`;
