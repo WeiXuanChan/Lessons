@@ -614,7 +614,7 @@
       // Question Bank Data Table
       const EQUATION_BANK = [
         {
-          topic: "Area of a circle",
+          topic: "Area of a circle.",
           equation: "A = πr²",
           variables: ["A", "r"],
           notes: [
@@ -626,20 +626,21 @@
           ]
         },
         {
-          topic: "Circumference of a circle (use radius)",
-          equation: "C = 2πr",
-          variables: ["C", "r"],
+          topic: "Circumference of a circle.",
+          equation: ["C = 2πr","C = πd"],
+          variables: ["C", "r", "d"],
           notes: [
             "C represents the Circumference (perimeter of the circle).",
-            "r is the radius."
+            "r is the radius.",
+            "d is diameter."
           ],
           keynotes: [
-            "Alternatively, C = πd where d is diameter."
+            ""
           ]
         },
         {
           topic: "Area of triangle",
-          equation: "A = ½bh",
+          equation: ["A = ½bh","A = ½hb"],
           variables: ["A", "b", "h"],
           notes: [
             "A is the area of the triangle.",
@@ -650,7 +651,7 @@
         },
         {
           topic: "Pythagoras’ theorem",
-          equation: "a² + b² = c²",
+          equation: ["a² + b² = c²"," c² = a² + b²"],
           variables: ["a", "b", "c"],
           notes: [
             "c represents the hypotenuse (longest side).",
@@ -662,7 +663,7 @@
         },
         {
           topic: "Area of rectangle",
-          equation: "A = lw",
+          equation: ["A = lw","A = wl"],
           variables: ["A", "l", "w"],
           notes: [
             "A represents area.",
@@ -673,7 +674,7 @@
         },
         {
           topic: "Area of trapezium",
-          equation: "A = ½(a+b)h",
+          equation: ["A = ½(a+b)h","A = h(a+b)/2"],
           variables: ["A", "a", "b", "h"],
           notes: [
             "a and b are the parallel sides.",
@@ -685,22 +686,22 @@
         },
         {
           topic: "Volume of prism",
-          equation: "V = Base area × h",
-          variables: ["V", "Base area", "h"],
+          equation: ["V = Ah","V = hA"],
+          variables: ["V", "A", "h"],
           notes: [
             "V represents total volume.",
-            "Base area is the area of the uniform cross-section.",
+            "A is the area of the uniform cross-section.",
             "h is the height/length along the prism."
           ],
           keynotes: [""]
         },
         {
           topic: "Volume of pyramid",
-          equation: "V = ⅓ × Base area × h",
-          variables: ["V", "Base area", "h"],
+          equation: ["V = ⅓ A h","V = ⅓ hA","V = A h/3","V = hA/3"],
+          variables: ["V", "A", "h"],
           notes: [
             "V represents total volume.",
-            "Base area depends on the shape of the polygon base.",
+            "A is the Base area, area of the polygon base.",
             "h is the perpendicular height from base to apex."
           ],
           keynotes: [""]
@@ -730,12 +731,13 @@
         },
         {
           topic: "Curved surface area of cone",
-          equation: "A = πrl",
-          variables: ["A", "r", "l"],
+          equation: ["A = πrl","A = πlr"],
+          variables: ["A", "r", "l", "h"],
           notes: [
             "A represents curved (lateral) surface area.",
             "r is the base radius.",
-            "l is the slant height of the cone."
+            "l is the slant height of the cone.",
+            "h is the perpendicular height from base to apex."
           ],
           keynotes: [""]
         },
@@ -782,7 +784,7 @@
         },
         {
           topic: "Factorize: a² + 2ab + b²",
-          equation: " (a+b)²",
+          equation: ["(a+b)²","(b+a)²"],
           variables: ["a", "b"],
           notes: [""],
           keynotes: [
@@ -792,7 +794,7 @@
         },
         {
           topic: "Factorize: a² - 2ab + b²",
-          equation: " (a-b)²",
+          equation: "(a-b)²",
           variables: ["a", "b"],
           notes: [""],
           keynotes: [
@@ -802,7 +804,7 @@
         },
         {
           topic: "Factorize: a² - b²",
-          equation: "(a+b)(a-b)",
+          equation: ["(a+b)(a-b)","(a-b)(a+b)"],
           variables: ["a", "b"],
           notes: [""],
           keynotes: [
@@ -812,7 +814,7 @@
         },
         {
           topic: "Sum of interior angles",
-          equation: "(n-2) × 180°",
+          equation: ["180°(n-2)","(n-2)180°"],
           variables: ["n"],
           notes: [
             "n is the number of sides of the polygon."
@@ -1068,9 +1070,12 @@
         disableInputs();
 
         const cleanUser = cleanEquation(userEq);
-        const cleanTarget = cleanEquation(currentProblem.equation);
 
-        const isCorrect = (cleanUser === cleanTarget);
+        // Normalize single string or array into a standard array format
+        const validAnswers = Array.isArray(currentProblem.equation)  ? currentProblem.equation   : [currentProblem.equation];
+
+        // Check if user answer matches any valid answer variation
+        const isCorrect = validAnswers.some(target => cleanEquation(target) === cleanUser);
 
         const userName = document.getElementById('userNameInput').value.trim();
         let summaryHtml = `<strong>Name:</strong> ${userName || 'N/A'}<br/>`;
@@ -1087,6 +1092,7 @@
           }
         } else {
           feedbackBox.className = 'feedback incorrect';
+          const displayEquation = Array.isArray(currentProblem.equation) ? currentProblem.equation.join("  or  ")  : currentProblem.equation;
           let fbHtml = `<div class="feedback-heading">Incorrect</div>`;
 
           fbHtml += `<div class="solution-method-block">`;
@@ -1094,7 +1100,7 @@
           fbHtml += `<div class="math-working">`;
 
           fbHtml += `<div class="step-block">`;
-          fbHtml += `<div class="step-title" style="font-size: 1.2rem; color: var(--primary);">${currentProblem.equation}</div>`;
+          fbHtml += `<div class="step-title" style="font-size: 1.2rem; color: var(--primary);">${displayEquation}</div>`;
           fbHtml += `</div>`;
 
           fbHtml += `<div class="step-block" style="margin-top: 15px;">`;
